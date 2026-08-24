@@ -70,29 +70,30 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PARSE-01 | Pending | Pending |
-| PARSE-02 | Pending | Pending |
-| PARSE-03 | Pending | Pending |
-| PARSE-04 | Pending | Pending |
-| VIEW-01 | Pending | Pending |
-| VIEW-02 | Pending | Pending |
-| VIEW-03 | Pending | Pending |
-| VIEW-04 | Pending | Pending |
-| CLEAN-01 | Pending | Pending |
-| CLEAN-02 | Pending | Pending |
-| CLEAN-03 | Pending | Pending |
-| CLEAN-04 | Pending | Pending |
-| EXPORT-01 | Pending | Pending |
-| EXPORT-02 | Pending | Pending |
-| MCP-01 | Pending | Pending |
-| MCP-02 | Pending | Pending |
-| MCP-03 | Pending | Pending |
+| PARSE-01 | Phase 1 | Pending |
+| PARSE-02 | Phase 1 | Pending |
+| PARSE-03 | Phase 1 | Pending |
+| PARSE-04 | Phase 1 | Pending |
+| VIEW-01 | Phase 1 | Pending |
+| VIEW-02 | Phase 1 | Pending |
+| VIEW-03 | Phase 1 | Pending |
+| VIEW-04 | Phase 1 | Pending |
+| CLEAN-01 | Phase 2 | Pending |
+| CLEAN-02 | Phase 2 | Pending |
+| CLEAN-03 | Phase 2 | Pending |
+| CLEAN-04 | Phase 2 | Pending |
+| EXPORT-01 | Phase 2 | Pending |
+| EXPORT-02 | Phase 2 | Pending |
+| MCP-01 | Phase 3 | Pending |
+| MCP-02 | Phase 3 | Pending |
+| MCP-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 ⚠️
+- Mapped to phases: 17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-24*
-*Last updated: 2026-08-24 after initial definition*
+*Last updated: 2026-08-24 after roadmap creation*
+</content>
