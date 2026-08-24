@@ -29,7 +29,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can pan, zoom, and fit-to-view to navigate the rendered drawing
   4. User can toggle individual layer visibility on/off from a layer panel
   5. User can browse the drawing's structure by layer and entity type, including a visible count of any unsupported/unknown entities encountered during parsing
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Walking Skeleton tracer: scaffold + DXF parsing pipeline + LINE rendering + layer panel + pan/zoom/fit
+- [ ] 01-02-PLAN.md — Full entity rendering (9 types) + complete layer panel + structure browser + hover/click interactions
 **UI hint**: yes
 
 ### Phase 2: Manual Cleanup & Export
