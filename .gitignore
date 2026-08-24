@@ -3,6 +3,9 @@ dist/
 dist-ssr/
 *.local
 
+# GSD parallel-execution worktrees (never committed -- per-agent scratch checkouts)
+.claude/worktrees/
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
