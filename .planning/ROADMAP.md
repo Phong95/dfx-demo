@@ -59,7 +59,16 @@ Plans:
   4. User can undo and redo any cleanup action they've taken, in sequence
   5. User can export the cleaned drawing to a DXF file that re-parses correctly and preserves all untouched content byte-for-byte
 
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 02-01-PLAN.md — Tracer: select, delete/hide, undo/redo, properties panel, box-select rubber band
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md — Export pipeline (surgical tag-stream filter + validation + save), batch-delete confirmation, export toasts
+
 **UI hint**: yes
 
 ### Phase 3: AI-Assisted Cleanup via MCP
