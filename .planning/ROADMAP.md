@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can toggle individual layer visibility on/off from a layer panel
   5. User can browse the drawing's structure by layer and entity type, including a visible count of any unsupported/unknown entities encountered during parsing
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
 **Wave 1**
 
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Load & Browse a DXF Drawing | 2/2 | Complete | 2026-08-24 |
+| 1. Load & Browse a DXF Drawing | 2/2 | Complete    | 2026-08-24 |
 | 2. Manual Cleanup & Export | 0/TBD | Not started | - |
 | 3. AI-Assisted Cleanup via MCP | 0/TBD | Not started | - |
 </content>
