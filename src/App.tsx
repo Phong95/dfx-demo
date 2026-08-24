@@ -9,6 +9,7 @@ import { CleanupToolbar } from '@/components/CleanupToolbar';
 import { Stage, type StageHandle } from '@/components/CanvasViewer/Stage';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Toaster } from '@/components/ui/sonner';
 import './App.css';
 
 function App() {
@@ -75,6 +76,8 @@ function App() {
         )}
         {dxfData && !error && <Stage ref={stageRef} />}
       </main>
+
+      <Toaster theme="dark" />
     </div>
   );
 }

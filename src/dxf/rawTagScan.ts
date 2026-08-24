@@ -17,7 +17,13 @@
 
 // Exact EntityName union dxf-parser@1.1.2 registers handlers for
 // (dist/entities/geomtry.d.ts) -- anything outside this set inside
-// ENTITIES/BLOCKS is unsupported and reported as unknown.
+// ENTITIES/BLOCKS is unsupported and reported as unknown. VERTEX is
+// deliberately excluded: it has no registered top-level handler in
+// dxf-parser -- it is only consumed internally by POLYLINE's own vertex
+// loop, so it's never a distinct "supported type" to compare against. It is
+// also skipped from the type tally entirely (see the VERTEX/SEQEND guards
+// below), so its absence from this set is moot for counting purposes, but
+// kept correct here in case this set is ever read for other purposes.
 const SUPPORTED_TYPES = new Set([
   '3DFACE',
   'ARC',
@@ -34,7 +40,6 @@ const SUPPORTED_TYPES = new Set([
   'SOLID',
   'SPLINE',
   'TEXT',
-  'VERTEX',
 ]);
 
 export interface LayerFlags {
@@ -107,6 +112,13 @@ export function rawTagScan(dxfText: string): RawTagScanResult {
     }
 
     if (currentSection === 'ENTITIES' && code === 0) {
+      // VERTEX/SEQEND are continuation markers consumed internally by
+      // dxf-parser's POLYLINE handler, never a distinct top-level entity --
+      // counting them here produced a false "unknown entity: SEQEND" report
+      // for every file containing a POLYLINE (02-RESEARCH.md Pitfall 1).
+      if (value === 'VERTEX' || value === 'SEQEND') {
+        continue;
+      }
       typeCounts.set(value, (typeCounts.get(value) ?? 0) + 1);
       continue;
     }
@@ -118,6 +130,12 @@ export function rawTagScan(dxfText: string): RawTagScanResult {
       }
       if (value === 'ENDBLK') {
         inBlockDef = false;
+        continue;
+      }
+      // Same VERTEX/SEQEND skip as ENTITIES above -- POLYLINE entities
+      // inside block definitions (rendered via INSERT) must not produce
+      // false unknown-entity reports either.
+      if (value === 'VERTEX' || value === 'SEQEND') {
         continue;
       }
       if (inBlockDef) {
