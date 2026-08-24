@@ -83,15 +83,15 @@ Plans:
   2. User can describe a cleanup intent in natural language and have Claude propose structured operations (which layers/entities to remove) via apply_cleanup_rule or remove_selection
   3. User can preview AI-proposed changes in a dry-run before anything is applied, and only after confirming does the change take effect (matching the manual undo/redo model from Phase 2) and export via export_dxf
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans executed
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Tracer: two-process MCP server architecture + Engine Server + MCP relay + list_layers end-to-end
+- [x] 03-01-PLAN.md — Tracer: two-process MCP server architecture + Engine Server + MCP relay + list_layers end-to-end
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — Browser WS sync + remaining MCP tools (get_structure, apply_cleanup_rule, remove_selection, confirm_proposal, export_dxf) + Claude Desktop config
+- [x] 03-02-PLAN.md — Browser WS sync + remaining MCP tools (get_structure, apply_cleanup_rule, remove_selection, confirm_proposal, export_dxf) + Claude Desktop config
 
 ## Progress
 
@@ -102,5 +102,5 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Load & Browse a DXF Drawing | 2/2 | Complete    | 2026-08-24 |
 | 2. Manual Cleanup & Export | 2/2 | Complete    | 2026-08-24 |
-| 3. AI-Assisted Cleanup via MCP | 0/2 | Not started | - |
+| 3. AI-Assisted Cleanup via MCP | 2/2 | In Progress|  |
 </content>

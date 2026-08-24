@@ -33,9 +33,9 @@
 
 ### MCP Server
 
-- [ ] **MCP-01**: MCP server with stdio transport for Claude Desktop (list_layers, get_structure, apply_cleanup_rule, remove_selection, export_dxf tools)
-- [ ] **MCP-02**: Natural language cleanup — user describes intent, AI proposes structured operations
-- [ ] **MCP-03**: Preview/dry-run mode showing proposed changes before applying destructive operations
+- [x] **MCP-01**: MCP server with stdio transport for Claude Desktop (list_layers, get_structure, apply_cleanup_rule, remove_selection, export_dxf tools)
+- [x] **MCP-02**: Natural language cleanup — user describes intent, AI proposes structured operations
+- [x] **MCP-03**: Preview/dry-run mode showing proposed changes before applying destructive operations
 
 ## v2 Requirements
 
@@ -84,9 +84,9 @@
 | CLEAN-04 | Phase 2 | Complete |
 | EXPORT-01 | Phase 2 | Complete |
 | EXPORT-02 | Phase 2 | Complete |
-| MCP-01 | Phase 3 | Pending |
-| MCP-02 | Phase 3 | Pending |
-| MCP-03 | Phase 3 | Pending |
+| MCP-01 | Phase 3 | Complete |
+| MCP-02 | Phase 3 | Complete |
+| MCP-03 | Phase 3 | Complete |
 
 **Coverage:**
 

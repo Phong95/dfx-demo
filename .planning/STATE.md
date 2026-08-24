@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 3
 current_phase_name: AI-Assisted Cleanup via MCP
 status: executing
-stopped_at: Phase 2 complete
-last_updated: "2026-08-24T13:24:34.038Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-08-24T14:25:54.735Z"
 last_activity: 2026-08-24
-last_activity_desc: Phase 2 complete, transitioned to Phase 3
-state_head: aa2e19fd7921f8c47c012da6e8d59298707e7099
+last_activity_desc: Phase 3 Plan 02 complete (full MCP tool suite + dry-run/confirm safety flow)
+state_head: f8bd9a544a667ec01da01b82b1a4a1cc0ebb9cde
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 6
   percent: 67
 ---
 
@@ -23,19 +23,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-24)
 
 **Core value:** Engineers can load a structural DXF drawing, clean up unwanted annotations/dimensions/notes through a mix of layer/object selection and AI-assisted decisions, and export a clean DXF ready for their own work.
-**Current focus:** Phase 2 — Manual Cleanup & Export
+**Current focus:** Phase 3 — AI-Assisted Cleanup via MCP
 
 ## Current Position
 
-Phase: 3 (AI-Assisted Cleanup via MCP) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-  full load-clean-export loop (selection, box-select, delete/hide, undo/redo,
-  batch-delete dialog, export save dialog, toasts) is still outstanding —
-  see Pending Todos below, same pattern as Phase 1's UAT gap.
-Last activity: 2026-08-24 — Phase 2 complete, transitioned to Phase 3
+Phase: 3 (AI-Assisted Cleanup via MCP) — PLANS COMPLETE
+Plan: 01 complete, 02 complete (both plans in the phase are done)
+Status: All six MCP tools (list_layers, get_structure, apply_cleanup_rule,
+  remove_selection, confirm_proposal, export_dxf) implemented and verified
+  end-to-end via direct WS protocol testing. Interactive UAT with a real
+  Claude Desktop instance and browser-side Ctrl+Z-after-AI-mutation
+  verification still outstanding — see Pending Todos below, same pattern as
+  Phase 1/2's UAT gap. Phase-level ROADMAP.md checkbox not yet flipped
+  (reserved for a phase-close/ship step, not plan execution).
+Last activity: 2026-08-24 — Phase 3 Plan 02 complete
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -55,7 +58,7 @@ Progress: [███░░░░░░░] 33%
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01, 01-02, 02-01, 02-02
+- Last 5 plans: 01-02, 02-01, 02-02, 03-01, 03-02
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -64,6 +67,7 @@ Progress: [███░░░░░░░] 33%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 02 P02 | 35min | 2 tasks | 9 files |
+| Phase 3 P02 | 65min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -80,11 +84,14 @@ Recent decisions affecting current work:
 - Phase 1 Plan 02: bounding-box computation (`src/dxf/entityBounds.ts`) covers all 9 rendered entity types, not just LINE, so fit-to-view/zoom-to-entity remain correct as entity coverage grows.
 - [Phase 2]: Installed radix-ui umbrella package (verified same github.com/radix-ui/primitives source as approved @radix-ui/react-alert-dialog) since shadcn's current alert-dialog component depends on it directly
 - [Phase 2]: Export pipeline uses character-offset (not line-array) boundary scanning to preserve original CRLF/LF bytes exactly; validated round-trip against a hand-built POLYLINE+VERTEX+SEQEND fixture
+- [Phase 3]: Phase 3 Plan 02: confirm_proposal bumps documentModel.version synchronously on apply (biases toward extra safe re-preview requests over ever silently applying a stale proposal)
+- [Phase 3]: Phase 3 Plan 02: split src/dxf/exportDxf.ts into pure functions (server-safe) and src/dxf/saveDxf.ts (browser-only) so tsconfig.server.json's Node-only project can import filterDxfText/validateExport without pulling DOM globals into its type-check scope
 
 ### Pending Todos
 
 - Run interactive UAT (real multi-layer, multi-entity-type DXF file) against Phase 1's full feature set before considering Phase 1 fully closed out — this execution environment had no browser/screenshot automation available, so Task 3's `<human-check>` step (expand/collapse, click-to-zoom, virtualized scroll, Unknown section) and general visual-correctness checks (bulge-to-arc sign, INSERT/DIMENSION rendering) were not exercised interactively. See `01-02-SUMMARY.md` coverage block.
 - Run interactive UAT against Phase 2's full feature set — click/shift-click/box-select, Delete/Hide with 20%-opacity dashed rendering, Ctrl+Z/Ctrl+Shift+Z undo/redo, batch-delete AlertDialog at the 10-entity threshold, Export DXF (native Save-As dialog or Firefox/Safari download fallback) followed by re-loading the exported file to confirm it parses with the expected entity count. The export pipeline's core logic (boundary scanning, surgical filtering, validation) was verified programmatically against a hand-built fixture in `02-02-SUMMARY.md`, but the browser-only mechanics (dialog UI, toast rendering, actual file save) were not exercised interactively — no browser/screenshot automation was available in this execution environment. See `02-01-SUMMARY.md` and `02-02-SUMMARY.md` coverage blocks and `02-02-PLAN.md`'s `<human-check>` list.
+- Run interactive UAT against Phase 3's full feature set — connect a real Claude Desktop instance using `README.md`'s config snippet, and confirm all six tools respond correctly to natural-language requests; verify the browser-side Ctrl+Z undoes an AI-confirmed deletion and the viewer re-renders in real time. All six tools' request/response protocol, the stale-proposal rejection path, and the one-shot proposal guarantee were verified end-to-end via a direct WS test client (not Claude Desktop itself) against `test/fixtures/simple.dxf` — no Claude Desktop instance or browser/screenshot automation was available in this execution environment. See `03-02-SUMMARY.md` coverage blocks (D6, D8) and `03-02-PLAN.md`'s `<human-check>` list.
 
 ### Blockers/Concerns
 
@@ -92,6 +99,7 @@ Recent decisions affecting current work:
 - Surgical tag-stream filter/writer has no reference implementation to draw from — treat as first-class design task in Phase 2, budget extra time for round-trip testing.
 - AI-driven deletion with no preview/undo path is a data-loss/trust risk — Phase 3 MCP tools must be plan-then-execute (dry-run/confirm) from the first tool written, not retrofitted.
 - `gsd-tools.cjs` was unavailable in the Plan 01-02 execution environment (not found in worktree or main repo) — STATE.md/ROADMAP.md/REQUIREMENTS.md were updated manually for both 01-01 and 01-02 in this pass. During Plan 02-02, `gsd-tools.cjs` was still absent from the project's `RUNTIME_DIR`-relative paths (repo root / `.claude/` / `.codex/`) but was found and used successfully via the `$HOME/.claude/gsd-core/bin/gsd-tools.cjs` fallback — `roadmap.update-plan-progress` and `requirements.mark-complete` ran automatically; `state.advance-plan`/`state.update-progress` still failed to parse this project's STATE.md "Current Position" section format and required a manual edit. Consider running `/gsd-update` or verifying a project-local `gsd-core` install so the primary (non-fallback) resolution path succeeds directly next time.
+- During Plan 03-02, this execution's fresh worktree (`agent-a953579d956f180f9`) turned out to be branched from a point where 03-01's docs commit (`b27d1de`) only added `03-01-SUMMARY.md` itself — the STATE.md/ROADMAP.md/REQUIREMENTS.md updates for 03-01 (visible when reading the main checkout's copies, e.g. progress 83%) were made directly on `master` per 03-01-SUMMARY.md's own "Issues Encountered" note (its original worktree disappeared mid-session), and never made it back into this worktree's branch lineage. This plan's execution re-derived the correct state (both 03-01 and 03-02 complete) from ROADMAP.md/SUMMARY.md files on disk rather than trusting this worktree's stale STATE.md snapshot. Future worktree-isolated executions should diff their local STATE.md/ROADMAP.md against `master`'s copies before trusting them if a prior plan's SUMMARY mentions a worktree anomaly.
 
 ## Deferred Items
 
@@ -103,6 +111,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-08-24T10:07:56.916Z
-Stopped at: Phase 2 complete
-Resume file: 
+Last session: 2026-08-24T14:25:54.340Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: None
