@@ -28,8 +28,8 @@
 
 ### Export
 
-- [ ] **EXPORT-01**: Export cleaned DXF file via surgical tag-stream filtering (preserving untouched structure byte-for-byte)
-- [ ] **EXPORT-02**: Validate export by verifying re-parseable output
+- [x] **EXPORT-01**: Export cleaned DXF file via surgical tag-stream filtering (preserving untouched structure byte-for-byte)
+- [x] **EXPORT-02**: Validate export by verifying re-parseable output
 
 ### MCP Server
 
@@ -82,8 +82,8 @@
 | CLEAN-02 | Phase 2 | Complete |
 | CLEAN-03 | Phase 2 | Complete |
 | CLEAN-04 | Phase 2 | Complete |
-| EXPORT-01 | Phase 2 | Pending |
-| EXPORT-02 | Phase 2 | Pending |
+| EXPORT-01 | Phase 2 | Complete |
+| EXPORT-02 | Phase 2 | Complete |
 | MCP-01 | Phase 3 | Pending |
 | MCP-02 | Phase 3 | Pending |
 | MCP-03 | Phase 3 | Pending |
