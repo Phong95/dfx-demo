@@ -14,7 +14,7 @@ DXF Demo takes an engineer from "I have a messy structural DXF from another firm
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Load & Browse a DXF Drawing** - Parse a DXF into layers/entities/blocks with resolved colors and an unknown-entity report, and render it in a pannable, zoomable web viewer with a layer panel and structure browser.
-- [ ] **Phase 2: Manual Cleanup & Export** - Select entities by click or box, delete/hide them with full undo/redo, and export a cleaned DXF that preserves everything untouched byte-for-byte — completing the core load-clean-export loop by hand.
+- [x] **Phase 2: Manual Cleanup & Export** - Select entities by click or box, delete/hide them with full undo/redo, and export a cleaned DXF that preserves everything untouched byte-for-byte — completing the core load-clean-export loop by hand. (completed 2026-08-24)
 - [ ] **Phase 3: AI-Assisted Cleanup via MCP** - Claude Desktop connects over MCP to inspect the loaded drawing, propose cleanup operations from natural-language intent, and apply them only after a preview/dry-run confirmation.
 
 ## Phase Details
@@ -59,7 +59,7 @@ Plans:
   4. User can undo and redo any cleanup action they've taken, in sequence
   5. User can export the cleaned drawing to a DXF file that re-parses correctly and preserves all untouched content byte-for-byte
 
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 **Wave 1**
 
@@ -83,7 +83,15 @@ Plans:
   2. User can describe a cleanup intent in natural language and have Claude propose structured operations (which layers/entities to remove) via apply_cleanup_rule or remove_selection
   3. User can preview AI-proposed changes in a dry-run before anything is applied, and only after confirming does the change take effect (matching the manual undo/redo model from Phase 2) and export via export_dxf
 
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — Tracer: two-process MCP server architecture + Engine Server + MCP relay + list_layers end-to-end
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Browser WS sync + remaining MCP tools (get_structure, apply_cleanup_rule, remove_selection, confirm_proposal, export_dxf) + Claude Desktop config
 
 ## Progress
 
@@ -93,6 +101,6 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Load & Browse a DXF Drawing | 2/2 | Complete    | 2026-08-24 |
-| 2. Manual Cleanup & Export | 2/2 | In Progress|  |
-| 3. AI-Assisted Cleanup via MCP | 0/TBD | Not started | - |
+| 2. Manual Cleanup & Export | 2/2 | Complete    | 2026-08-24 |
+| 3. AI-Assisted Cleanup via MCP | 0/2 | Not started | - |
 </content>
