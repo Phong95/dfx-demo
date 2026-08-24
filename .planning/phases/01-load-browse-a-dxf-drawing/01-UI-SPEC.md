@@ -1,7 +1,7 @@
 ---
 phase: 1
 slug: load-browse-a-dxf-drawing
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-08-24
@@ -149,4 +149,4 @@ No third-party registries declared for this phase. The layer panel and structure
 - [ ] Dimension 5 Spacing: PASS
 - [ ] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved (2026-08-24)
