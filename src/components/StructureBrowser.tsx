@@ -63,7 +63,7 @@ export function StructureBrowser() {
   const dxfData = useDrawingStore((state) => state.dxfData);
   const unknownEntityReport = useDrawingStore((state) => state.unknownEntityReport);
   const zoomToEntity = useDrawingStore((state) => state.zoomToEntity);
-  const selectedEntityIndex = useDrawingStore((state) => state.selectedEntityIndex);
+  const focusedEntityIndex = useDrawingStore((state) => state.focusedEntityIndex);
 
   // Layer nodes start collapsed; clicking expands entity-type children, then
   // individual entities (CONTEXT.md Structure Browser Design decision 2).
@@ -166,7 +166,7 @@ export function StructureBrowser() {
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const row = rows[virtualRow.index];
             const indent = row.depth * 8;
-            const isSelected = row.kind === 'entity' && row.entityIndex === selectedEntityIndex;
+            const isSelected = row.kind === 'entity' && row.entityIndex === focusedEntityIndex;
 
             return (
               <div

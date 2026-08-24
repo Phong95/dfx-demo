@@ -6,11 +6,23 @@ interface LineShapeProps {
   entity: ILineEntity;
   color: string;
   strokeWidth?: number;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 }
 
-export function LineShape({ entity, color, strokeWidth = 1, onMouseEnter, onMouseLeave }: LineShapeProps) {
+export function LineShape({
+  entity,
+  color,
+  strokeWidth = 1,
+  opacity = 1,
+  dash,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+}: LineShapeProps) {
   const points = entity.vertices.flatMap((vertex) => [vertex.x, -vertex.y]);
 
   return (
@@ -19,8 +31,11 @@ export function LineShape({ entity, color, strokeWidth = 1, onMouseEnter, onMous
       stroke={color}
       strokeWidth={strokeWidth}
       hitStrokeWidth={10}
+      opacity={opacity}
+      dash={dash}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     />
   );
 }

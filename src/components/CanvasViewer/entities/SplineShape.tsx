@@ -7,11 +7,23 @@ interface SplineShapeProps {
   entity: ISplineEntity;
   color: string;
   strokeWidth?: number;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 }
 
-export function SplineShape({ entity, color, strokeWidth = 1, onMouseEnter, onMouseLeave }: SplineShapeProps) {
+export function SplineShape({
+  entity,
+  color,
+  strokeWidth = 1,
+  opacity = 1,
+  dash,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+}: SplineShapeProps) {
   const flatPoints = flattenSpline(entity);
   if (flatPoints.length < 2) return null;
 
@@ -23,8 +35,11 @@ export function SplineShape({ entity, color, strokeWidth = 1, onMouseEnter, onMo
       stroke={color}
       strokeWidth={strokeWidth}
       hitStrokeWidth={10}
+      opacity={opacity}
+      dash={dash}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     />
   );
 }

@@ -6,8 +6,11 @@ import { EntityRenderer } from './EntityRenderer';
 interface DimensionShapeProps {
   entity: IDimensionEntity;
   dxfData: IDxf;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   depth?: number;
 }
 
@@ -19,7 +22,20 @@ type ColoredEntity = IEntity & { resolvedColor?: string };
 // data, not drawable geometry (RESEARCH Pattern 3, Pitfall #3). Dimension
 // blocks are already authored in model-space coordinates, so no additional
 // transform is applied here.
-export function DimensionShape({ entity, dxfData, onMouseEnter, onMouseLeave, depth = 0 }: DimensionShapeProps) {
+//
+// `opacity`/`dash`/`onClick` are forwarded down into each recursive
+// EntityRenderer call rather than applied to the wrapping Group -- see
+// InsertShape's identical note.
+export function DimensionShape({
+  entity,
+  dxfData,
+  opacity = 1,
+  dash,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+  depth = 0,
+}: DimensionShapeProps) {
   const block = dxfData.blocks?.[entity.block];
   if (!block?.entities) return null;
 
@@ -31,8 +47,11 @@ export function DimensionShape({ entity, dxfData, onMouseEnter, onMouseLeave, de
           entity={blockEntity}
           color={(blockEntity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
           dxfData={dxfData}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
           depth={depth + 1}
         />
       ))}

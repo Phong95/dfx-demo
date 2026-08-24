@@ -29,6 +29,9 @@ export interface EntityRendererProps {
   strokeWidth?: number;
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  opacity?: number;
+  dash?: number[];
   depth?: number;
 }
 
@@ -37,6 +40,10 @@ export interface EntityRendererProps {
  * component. Unrecognized types render nothing (they are surfaced separately
  * via the unknown-entity warning banner / Unknown structure-browser section,
  * PARSE-03 -- this dispatcher is not the source of truth for that reporting).
+ *
+ * `onClick`/`opacity`/`dash` follow the same optional prop-drilling pattern
+ * established by `onMouseEnter`/`onMouseLeave` in Phase 1 (Phase 2 CLEAN-01,
+ * CLEAN-03: click-to-select and hidden-entity dimming).
  */
 export function EntityRenderer({
   entity,
@@ -45,6 +52,9 @@ export function EntityRenderer({
   strokeWidth,
   onMouseEnter,
   onMouseLeave,
+  onClick,
+  opacity = 1,
+  dash,
   depth = 0,
 }: EntityRendererProps) {
   switch (entity.type) {
@@ -54,8 +64,11 @@ export function EntityRenderer({
           entity={entity as ILineEntity}
           color={color}
           strokeWidth={strokeWidth}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     case 'ARC':
@@ -64,8 +77,11 @@ export function EntityRenderer({
           entity={entity as IArcEntity}
           color={color}
           strokeWidth={strokeWidth}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     case 'CIRCLE':
@@ -74,8 +90,11 @@ export function EntityRenderer({
           entity={entity as ICircleEntity}
           color={color}
           strokeWidth={strokeWidth}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     case 'LWPOLYLINE':
@@ -84,8 +103,11 @@ export function EntityRenderer({
           entity={entity as ILwpolylineEntity}
           color={color}
           strokeWidth={strokeWidth}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     case 'TEXT':
@@ -93,8 +115,11 @@ export function EntityRenderer({
         <TextShape
           entity={entity as ITextEntity}
           color={color}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     case 'MTEXT':
@@ -102,8 +127,11 @@ export function EntityRenderer({
         <MtextShape
           entity={entity as IMtextEntity}
           color={color}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     case 'INSERT':
@@ -111,8 +139,11 @@ export function EntityRenderer({
         <InsertShape
           entity={entity as IInsertEntity}
           dxfData={dxfData}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
           depth={depth}
         />
       );
@@ -121,8 +152,11 @@ export function EntityRenderer({
         <DimensionShape
           entity={entity as IDimensionEntity}
           dxfData={dxfData}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
           depth={depth}
         />
       );
@@ -132,8 +166,11 @@ export function EntityRenderer({
           entity={entity as ISplineEntity}
           color={color}
           strokeWidth={strokeWidth}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
         />
       );
     default:

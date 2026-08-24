@@ -7,16 +7,22 @@ interface LwpolylineShapeProps {
   entity: ILwpolylineEntity;
   color: string;
   strokeWidth?: number;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 }
 
 export function LwpolylineShape({
   entity,
   color,
   strokeWidth = 1,
+  opacity = 1,
+  dash,
   onMouseEnter,
   onMouseLeave,
+  onClick,
 }: LwpolylineShapeProps) {
   const vertices = entity.vertices;
   if (!vertices || vertices.length === 0) return null;
@@ -52,8 +58,11 @@ export function LwpolylineShape({
       stroke={color}
       strokeWidth={strokeWidth}
       hitStrokeWidth={10}
+      opacity={opacity}
+      dash={dash}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     />
   );
 }

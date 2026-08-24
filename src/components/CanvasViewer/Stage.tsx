@@ -18,6 +18,10 @@ export interface StageHandle {
 }
 
 const ACCENT_COLOR = '#3B82F6';
+// Hidden entities render dimmed + dashed but stay visible/included in export
+// (CONTEXT.md D-08: hiding is a view state, not a data mutation).
+const HIDDEN_OPACITY = 0.2;
+const HIDDEN_DASH = [6, 4];
 
 type ColoredEntity = IEntity & { resolvedColor?: string };
 
@@ -27,7 +31,12 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
   const setViewerTransform = useDrawingStore((state) => state.setViewerTransform);
   const hoverEntityIndex = useDrawingStore((state) => state.hoverEntityIndex);
   const setHoverEntityIndex = useDrawingStore((state) => state.setHoverEntityIndex);
-  const selectedEntityIndex = useDrawingStore((state) => state.selectedEntityIndex);
+  const focusedEntityIndex = useDrawingStore((state) => state.focusedEntityIndex);
+  const selectedEntityIndices = useDrawingStore((state) => state.selectedEntityIndices);
+  const deletedEntityIndices = useDrawingStore((state) => state.deletedEntityIndices);
+  const hiddenEntityIndices = useDrawingStore((state) => state.hiddenEntityIndices);
+  const toggleSelect = useDrawingStore((state) => state.toggleSelect);
+  const clearSelection = useDrawingStore((state) => state.clearSelection);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
@@ -78,12 +87,12 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dxfData, size.width > 0 && size.height > 0]);
 
-  // Zoom to and center the selected entity (structure-browser click-to-zoom, VIEW-04).
+  // Zoom to and center the focused entity (structure-browser click-to-zoom, VIEW-04).
   useEffect(() => {
     const stage = stageRef.current;
-    if (!stage || !dxfData || selectedEntityIndex === null || size.width === 0 || size.height === 0) return;
+    if (!stage || !dxfData || focusedEntityIndex === null || size.width === 0 || size.height === 0) return;
 
-    const entity = dxfData.entities[selectedEntityIndex];
+    const entity = dxfData.entities[focusedEntityIndex];
     if (!entity) return;
 
     const bbox = computeBoundsForEntity(entity);
@@ -103,7 +112,7 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     stage.batchDraw();
     setViewerTransform({ x, y, scale });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEntityIndex]);
+  }, [focusedEntityIndex]);
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -140,16 +149,23 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     setViewerTransform({ x: stage.x(), y: stage.y(), scale: stage.scaleX() });
   };
 
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    // Background click (not a shape) deselects (CONTEXT.md D-01).
+    if (e.target === e.target.getStage()) {
+      clearSelection();
+    }
+  };
+
   const layerNames = dxfData ? Object.keys(dxfData.tables?.layer?.layers ?? {}) : [];
 
-  // Identify hovered/selected entities by array index, not `entity.handle` --
+  // Identify hovered/focused entities by array index, not `entity.handle` --
   // dxf-parser only sets `handle` when the raw DXF has a group-5 code, which
   // is not guaranteed (confirmed absent in this project's own test fixture);
   // an undefined/duplicate handle would break hover matching (Rule 1 fix).
   const hoveredEntity =
     dxfData && hoverEntityIndex !== null ? (dxfData.entities[hoverEntityIndex] ?? null) : null;
-  const selectedEntity =
-    dxfData && selectedEntityIndex !== null ? (dxfData.entities[selectedEntityIndex] ?? null) : null;
+  const focusedEntity =
+    dxfData && focusedEntityIndex !== null ? (dxfData.entities[focusedEntityIndex] ?? null) : null;
 
   return (
     <div ref={containerRef} className="h-full w-full">
@@ -161,6 +177,7 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
           draggable
           onWheel={handleWheel}
           onDragEnd={handleDragEnd}
+          onClick={handleStageClick}
         >
           {layerNames.map((layerName) => {
             if (!layerVisibility[layerName]) return null;
@@ -169,27 +186,48 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
               .filter(({ entity }) => entity.layer === layerName);
             return (
               <KonvaLayer key={layerName}>
-                {entities.map(({ entity, index }) => (
-                  <EntityRenderer
-                    key={index}
-                    entity={entity}
-                    color={(entity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
-                    dxfData={dxfData!}
-                    onMouseEnter={() => setHoverEntityIndex(index)}
-                    onMouseLeave={() => setHoverEntityIndex(null)}
-                  />
-                ))}
+                {entities.map(({ entity, index }) => {
+                  // Deleted entities render nothing at all (CONTEXT.md D-05).
+                  if (deletedEntityIndices.has(index)) return null;
+                  const isHidden = hiddenEntityIndices.has(index);
+                  return (
+                    <EntityRenderer
+                      key={index}
+                      entity={entity}
+                      color={(entity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
+                      dxfData={dxfData!}
+                      opacity={isHidden ? HIDDEN_OPACITY : 1}
+                      dash={isHidden ? HIDDEN_DASH : undefined}
+                      onMouseEnter={() => setHoverEntityIndex(index)}
+                      onMouseLeave={() => setHoverEntityIndex(null)}
+                      onClick={(e) => toggleSelect(index, e.evt.shiftKey)}
+                    />
+                  );
+                })}
               </KonvaLayer>
             );
           })}
-          {dxfData && (hoveredEntity || selectedEntity) && (
+          {dxfData && (hoveredEntity || focusedEntity || selectedEntityIndices.size > 0) && (
             <KonvaLayer listening={false}>
               {hoveredEntity && (
                 <EntityRenderer entity={hoveredEntity} color={ACCENT_COLOR} dxfData={dxfData} strokeWidth={2} />
               )}
-              {selectedEntity && selectedEntity !== hoveredEntity && (
-                <EntityRenderer entity={selectedEntity} color={ACCENT_COLOR} dxfData={dxfData} strokeWidth={2} />
+              {focusedEntity && focusedEntity !== hoveredEntity && (
+                <EntityRenderer entity={focusedEntity} color={ACCENT_COLOR} dxfData={dxfData} strokeWidth={2} />
               )}
+              {[...selectedEntityIndices].map((index) => {
+                const entity = dxfData.entities[index];
+                if (!entity) return null;
+                return (
+                  <EntityRenderer
+                    key={`selected-${index}`}
+                    entity={entity}
+                    color={ACCENT_COLOR}
+                    dxfData={dxfData}
+                    strokeWidth={2}
+                  />
+                );
+              })}
             </KonvaLayer>
           )}
         </KonvaStage>

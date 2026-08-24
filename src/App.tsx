@@ -4,6 +4,8 @@ import { useDrawingStore } from '@/store/drawingStore';
 import { DropZone } from '@/components/DropZone';
 import { LayerPanel } from '@/components/LayerPanel';
 import { StructureBrowser } from '@/components/StructureBrowser';
+import { PropertiesPanel } from '@/components/PropertiesPanel';
+import { CleanupToolbar } from '@/components/CleanupToolbar';
 import { Stage, type StageHandle } from '@/components/CanvasViewer/Stage';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,8 +23,8 @@ function App() {
   };
 
   return (
-    <div className="grid h-screen grid-cols-[320px_1fr] grid-rows-[48px_1fr] bg-background text-foreground">
-      <header className="col-span-2 flex h-12 items-center justify-between bg-surface px-4">
+    <div className="grid h-screen grid-cols-[320px_1fr] grid-rows-[48px_48px_1fr] bg-background text-foreground">
+      <header className="col-span-2 row-start-1 flex h-12 items-center justify-between bg-surface px-4">
         <span
           title={fileName ?? undefined}
           className="max-w-md overflow-hidden text-ellipsis whitespace-nowrap text-sm"
@@ -40,17 +42,25 @@ function App() {
         </Button>
       </header>
 
-      <aside className="flex flex-col overflow-hidden bg-surface">
-        <div className="h-[300px] shrink-0 overflow-hidden">
+      <aside className="row-start-2 row-span-2 flex flex-col overflow-hidden bg-surface">
+        <div className="h-[240px] shrink-0 overflow-hidden">
           <LayerPanel />
         </div>
         <Separator />
         <div className="min-h-0 flex-1 overflow-hidden">
           <StructureBrowser />
         </div>
+        <Separator />
+        <div className="h-[220px] shrink-0 overflow-hidden">
+          <PropertiesPanel />
+        </div>
       </aside>
 
-      <main className="overflow-hidden bg-background">
+      <div className="row-start-2 col-start-2">
+        <CleanupToolbar />
+      </div>
+
+      <main className="row-start-3 col-start-2 overflow-hidden bg-background">
         {!dxfData && !isLoading && !error && <DropZone />}
         {isLoading && (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

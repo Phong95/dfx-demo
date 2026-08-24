@@ -6,8 +6,11 @@ import { stripMTextFormatting } from '@/dxf/stripMTextFormatting';
 interface MtextShapeProps {
   entity: IMtextEntity;
   color: string;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 }
 
 // attachmentPoint: 1=top-left 2=top-center 3=top-right
@@ -28,7 +31,15 @@ function verticalAlignFromAttachmentPoint(attachmentPoint: number | undefined): 
   return 'bottom';
 }
 
-export function MtextShape({ entity, color, onMouseEnter, onMouseLeave }: MtextShapeProps) {
+export function MtextShape({
+  entity,
+  color,
+  opacity = 1,
+  dash,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+}: MtextShapeProps) {
   if (!entity.position) return null;
 
   const text = stripMTextFormatting(entity.text ?? '');
@@ -44,8 +55,11 @@ export function MtextShape({ entity, color, onMouseEnter, onMouseLeave }: MtextS
       rotation={-(entity.rotation ?? 0)}
       align={alignFromAttachmentPoint(entity.attachmentPoint)}
       verticalAlign={verticalAlignFromAttachmentPoint(entity.attachmentPoint)}
+      opacity={opacity}
+      dash={dash}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     />
   );
 }

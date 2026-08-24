@@ -6,8 +6,11 @@ import { EntityRenderer } from './EntityRenderer';
 interface InsertShapeProps {
   entity: IInsertEntity;
   dxfData: IDxf;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   depth?: number;
 }
 
@@ -22,7 +25,22 @@ const MAX_DEPTH = 5;
 // geometry -- INSERT.name is a name into dxf.blocks; the actual graphic lives
 // in that block's entities array, rendered with position/rotation/scale
 // applied (RESEARCH Pattern 3).
-export function InsertShape({ entity, dxfData, onMouseEnter, onMouseLeave, depth = 0 }: InsertShapeProps) {
+//
+// `opacity`/`dash`/`onClick` are forwarded down into each recursive
+// EntityRenderer call rather than applied to the wrapping Group -- Group has
+// no `dash` concept, and this keeps a single click/select/dim policy applied
+// consistently per rendered sub-shape (matches the existing per-child `color`
+// forwarding pattern below).
+export function InsertShape({
+  entity,
+  dxfData,
+  opacity = 1,
+  dash,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+  depth = 0,
+}: InsertShapeProps) {
   if (depth >= MAX_DEPTH) return null;
   if (!entity.position) return null;
 
@@ -43,8 +61,11 @@ export function InsertShape({ entity, dxfData, onMouseEnter, onMouseLeave, depth
           entity={blockEntity}
           color={(blockEntity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
           dxfData={dxfData}
+          opacity={opacity}
+          dash={dash}
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
           depth={depth + 1}
         />
       ))}

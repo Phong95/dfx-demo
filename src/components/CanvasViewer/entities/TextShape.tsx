@@ -5,8 +5,11 @@ import type Konva from 'konva';
 interface TextShapeProps {
   entity: ITextEntity;
   color: string;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 }
 
 // Note: entities in this codebase negate each coordinate individually (DXF
@@ -17,7 +20,11 @@ interface TextShapeProps {
 // upside down. Rotation, however, does need to be negated: DXF measures
 // rotation counter-clockwise in Y-up space, which maps to a clockwise rotation
 // in canvas's Y-down space (Konva's positive-rotation-is-clockwise convention).
-export function TextShape({ entity, color, onMouseEnter, onMouseLeave }: TextShapeProps) {
+//
+// `dash` has no visual effect on unstroked text (Text has no default stroke)
+// but is still accepted/forwarded for prop-shape consistency with the other
+// shape components (EntityRenderer's uniform dispatch contract).
+export function TextShape({ entity, color, opacity = 1, dash, onMouseEnter, onMouseLeave, onClick }: TextShapeProps) {
   if (!entity.startPoint) return null;
 
   return (
@@ -28,8 +35,11 @@ export function TextShape({ entity, color, onMouseEnter, onMouseLeave }: TextSha
       fontSize={entity.textHeight || 1}
       fill={color}
       rotation={-(entity.rotation ?? 0)}
+      opacity={opacity}
+      dash={dash}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     />
   );
 }

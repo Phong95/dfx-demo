@@ -6,8 +6,11 @@ interface ArcShapeProps {
   entity: IArcEntity;
   color: string;
   strokeWidth?: number;
+  opacity?: number;
+  dash?: number[];
   onMouseEnter?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
   onMouseLeave?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
+  onClick?: (e: Konva.KonvaEventObject<MouseEvent>) => void;
 }
 
 function toRadians(deg: number): number {
@@ -17,7 +20,16 @@ function toRadians(deg: number): number {
 // Konva's built-in Arc component draws a filled wedge/donut, not an open
 // stroked arc segment. Use a custom Shape with sceneFunc calling the native
 // canvas arc() method instead (RESEARCH Pattern 6).
-export function ArcShape({ entity, color, strokeWidth = 1, onMouseEnter, onMouseLeave }: ArcShapeProps) {
+export function ArcShape({
+  entity,
+  color,
+  strokeWidth = 1,
+  opacity = 1,
+  dash,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+}: ArcShapeProps) {
   if (!entity.center || typeof entity.radius !== 'number') return null;
 
   return (
@@ -37,8 +49,11 @@ export function ArcShape({ entity, color, strokeWidth = 1, onMouseEnter, onMouse
       stroke={color}
       strokeWidth={strokeWidth}
       hitStrokeWidth={10}
+      opacity={opacity}
+      dash={dash}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={onClick}
     />
   );
 }
