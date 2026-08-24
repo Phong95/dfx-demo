@@ -8,54 +8,25 @@ import {
 } from 'react';
 import { Stage as KonvaStage, Layer as KonvaLayer } from 'react-konva';
 import type Konva from 'konva';
-import type { IEntity, ILineEntity } from 'dxf-parser';
+import type { IEntity } from 'dxf-parser';
 import { useDrawingStore } from '@/store/drawingStore';
-import { LineShape } from './entities/LineShape';
+import { EntityRenderer } from './entities/EntityRenderer';
+import { computeBoundsForEntities } from '@/dxf/entityBounds';
 
 export interface StageHandle {
   fitToView: () => void;
 }
 
-interface BoundingBox {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-}
+const ACCENT_COLOR = '#3B82F6';
 
 type ColoredEntity = IEntity & { resolvedColor?: string };
-
-// Compute a bounding box in canvas space (Y already flipped: DXF Y-up -> canvas Y-down)
-// from every LINE entity's vertices. Deliberately does not trust $EXTMIN/$EXTMAX header
-// vars, which are often stale/unset in real-world DXF files (RESEARCH Pattern 5).
-function computeBoundingBox(entities: IEntity[]): BoundingBox | null {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  let found = false;
-
-  for (const entity of entities) {
-    if (entity.type !== 'LINE') continue;
-    const line = entity as ILineEntity;
-    for (const vertex of line.vertices) {
-      const x = vertex.x;
-      const y = -vertex.y;
-      found = true;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-  }
-
-  return found ? { minX, minY, maxX, maxY } : null;
-}
 
 export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
   const dxfData = useDrawingStore((state) => state.dxfData);
   const layerVisibility = useDrawingStore((state) => state.layerVisibility);
   const setViewerTransform = useDrawingStore((state) => state.setViewerTransform);
+  const hoverEntityHandle = useDrawingStore((state) => state.hoverEntityHandle);
+  const setHoverEntityHandle = useDrawingStore((state) => state.setHoverEntityHandle);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
@@ -78,7 +49,7 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     const stage = stageRef.current;
     if (!stage || !dxfData || size.width === 0 || size.height === 0) return;
 
-    const bbox = computeBoundingBox(dxfData.entities);
+    const bbox = computeBoundsForEntities(dxfData.entities);
     if (!bbox) return;
 
     const contentW = bbox.maxX - bbox.minX || 1;
@@ -143,6 +114,11 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
 
   const layerNames = dxfData ? Object.keys(dxfData.tables?.layer?.layers ?? {}) : [];
 
+  const hoveredEntity =
+    dxfData && hoverEntityHandle !== null
+      ? (dxfData.entities.find((e) => e.handle === hoverEntityHandle) ?? null)
+      : null;
+
   return (
     <div ref={containerRef} className="h-full w-full">
       {size.width > 0 && size.height > 0 && (
@@ -156,22 +132,27 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
         >
           {layerNames.map((layerName) => {
             if (!layerVisibility[layerName]) return null;
-            const entities = (dxfData?.entities ?? []).filter(
-              (entity): entity is ILineEntity =>
-                entity.layer === layerName && entity.type === 'LINE',
-            );
+            const entities = (dxfData?.entities ?? []).filter((entity) => entity.layer === layerName);
             return (
               <KonvaLayer key={layerName}>
-                {entities.map((entity, idx) => (
-                  <LineShape
-                    key={idx}
+                {entities.map((entity) => (
+                  <EntityRenderer
+                    key={entity.handle}
                     entity={entity}
                     color={(entity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
+                    dxfData={dxfData!}
+                    onMouseEnter={() => setHoverEntityHandle(entity.handle)}
+                    onMouseLeave={() => setHoverEntityHandle(null)}
                   />
                 ))}
               </KonvaLayer>
             );
           })}
+          {dxfData && hoveredEntity && (
+            <KonvaLayer listening={false}>
+              <EntityRenderer entity={hoveredEntity} color={ACCENT_COLOR} dxfData={dxfData} strokeWidth={2} />
+            </KonvaLayer>
+          )}
         </KonvaStage>
       )}
     </div>

@@ -22,10 +22,12 @@ interface DrawingState {
   error: string | null;
   fileName: string | null;
   viewerTransform: ViewerTransform | null;
+  hoverEntityHandle: number | null;
 
   loadFile: (file: File) => Promise<void>;
   toggleLayerVisibility: (layerName: string) => void;
   setViewerTransform: (transform: ViewerTransform) => void;
+  setHoverEntityHandle: (handle: number | null) => void;
 }
 
 export const useDrawingStore = create<DrawingState>((set) => ({
@@ -37,6 +39,7 @@ export const useDrawingStore = create<DrawingState>((set) => ({
   error: null,
   fileName: null,
   viewerTransform: null,
+  hoverEntityHandle: null,
 
   loadFile: async (file: File) => {
     set({ isLoading: true, error: null });
@@ -102,5 +105,9 @@ export const useDrawingStore = create<DrawingState>((set) => ({
 
   setViewerTransform: (transform: ViewerTransform) => {
     set({ viewerTransform: transform });
+  },
+
+  setHoverEntityHandle: (handle: number | null) => {
+    set({ hoverEntityHandle: handle });
   },
 }));
