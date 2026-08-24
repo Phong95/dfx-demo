@@ -7,6 +7,7 @@ DXF Demo takes an engineer from "I have a messy structural DXF from another firm
 ## Phases
 
 **Phase Numbering:**
+
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
@@ -19,45 +20,60 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Load & Browse a DXF Drawing
+
 **Goal**: Engineer can load a structural DXF file and visually browse its layers, entities, and structure in the web viewer, with confidence that colors are correct and nothing was silently dropped.
 **Mode:** mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: PARSE-01, PARSE-02, PARSE-03, PARSE-04, VIEW-01, VIEW-02, VIEW-03, VIEW-04
 **Success Criteria** (what must be TRUE):
+
   1. User can open a DXF file and see it parsed into layers, entities, and blocks, with the original raw tag stream preserved internally to support lossless export later
   2. User can view the drawing rendered on canvas (LINE, ARC, CIRCLE, LWPOLYLINE, TEXT, MTEXT, INSERT, DIMENSION, SPLINE) with entities colored by their correctly resolved BYLAYER/BYBLOCK color
   3. User can pan, zoom, and fit-to-view to navigate the rendered drawing
   4. User can toggle individual layer visibility on/off from a layer panel
   5. User can browse the drawing's structure by layer and entity type, including a visible count of any unsupported/unknown entities encountered during parsing
+
 **Plans:** 2 plans
 Plans:
+**Wave 1**
+
 - [ ] 01-01-PLAN.md — Walking Skeleton tracer: scaffold + DXF parsing pipeline + LINE rendering + layer panel + pan/zoom/fit
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 01-02-PLAN.md — Full entity rendering (9 types) + complete layer panel + structure browser + hover/click interactions
+
 **UI hint**: yes
 
 ### Phase 2: Manual Cleanup & Export
+
 **Goal**: Engineer can select unwanted entities in the loaded drawing, remove or hide them with full undo/redo safety, and export a cleaned DXF file that preserves everything else exactly as it was — delivering a complete, usable load-clean-export workflow without needing AI.
 **Mode:** mvp
 **Depends on**: Phase 1
 **Requirements**: CLEAN-01, CLEAN-02, CLEAN-03, CLEAN-04, EXPORT-01, EXPORT-02
 **Success Criteria** (what must be TRUE):
+
   1. User can click an entity in the viewer to select it and see its details in a properties panel
   2. User can select multiple entities at once via box-select or shift-click
   3. User can delete or hide the selected entities from the drawing
   4. User can undo and redo any cleanup action they've taken, in sequence
   5. User can export the cleaned drawing to a DXF file that re-parses correctly and preserves all untouched content byte-for-byte
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 3: AI-Assisted Cleanup via MCP
+
 **Goal**: Engineer can describe cleanup intent in natural language to Claude Desktop, which uses MCP tools to inspect the loaded drawing and propose or apply cleanup operations safely, without ever risking an unreviewed destructive change.
 **Mode:** mvp
 **Depends on**: Phase 2
 **Requirements**: MCP-01, MCP-02, MCP-03
 **Success Criteria** (what must be TRUE):
+
   1. User can connect Claude Desktop to the MCP server (stdio transport) and have it list layers and get the structure of the currently loaded drawing
   2. User can describe a cleanup intent in natural language and have Claude propose structured operations (which layers/entities to remove) via apply_cleanup_rule or remove_selection
   3. User can preview AI-proposed changes in a dry-run before anything is applied, and only after confirming does the change take effect (matching the manual undo/redo model from Phase 2) and export via export_dxf
+
 **Plans**: TBD
 
 ## Progress
