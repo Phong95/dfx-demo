@@ -1,18 +1,15 @@
 /**
  * Typed WebSocket message definitions shared by the Engine Server
- * (src/server/engine.ts), the MCP relay (src/server/index.ts), and --
- * for the browser-facing leg -- the future src/lib/engineSocket.ts client.
+ * (src/server/engine.ts), the MCP relay (src/server/index.ts), and the
+ * browser-facing leg (src/lib/engineSocket.ts).
  *
  * Two independent client roles connect to the same Engine Server WS port
  * (RESEARCH Architecture Patterns diagram, "TWO logical WS roles on one
  * port"):
- *   - Role A: the browser -- sends `sync_state`, will later receive
- *     `apply_mutation` (Plan 02).
+ *   - Role A: the browser -- sends `sync_state`, receives `apply_mutation`
+ *     when an AI-confirmed proposal is applied.
  *   - Role B: the MCP relay -- sends `tool_request`, receives
  *     `tool_response`.
- *
- * This plan only needs the messages for the list_layers tracer slice;
- * `apply_mutation` and proposal-related message types are added in Plan 02.
  */
 
 /** Browser -> Engine Server: full document sync, sent on file load and on
@@ -44,10 +41,22 @@ export interface ToolResponseMessage {
   error?: string;
 }
 
+/** Engine Server -> browser: an AI-confirmed proposal's indices have been
+ * applied server-side; the browser applies the same mutation locally via
+ * `useDrawingStore.getState().applyIndices(indices, action)` so the viewer
+ * updates in real time and the change is undoable via the existing zundo
+ * undo/redo stack (RESEARCH Pattern 5). */
+export interface ApplyMutationMessage {
+  type: 'apply_mutation';
+  indices: number[];
+  action: 'delete' | 'hide';
+}
+
 export type EngineInboundMessage = SyncStateMessage | ToolRequestMessage;
-export type EngineOutboundMessage = ToolResponseMessage;
+export type EngineOutboundMessage = ToolResponseMessage | ApplyMutationMessage;
 
 export type WsMessage =
   | SyncStateMessage
   | ToolRequestMessage
-  | ToolResponseMessage;
+  | ToolResponseMessage
+  | ApplyMutationMessage;

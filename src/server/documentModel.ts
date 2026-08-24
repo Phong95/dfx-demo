@@ -26,6 +26,21 @@ export interface LayerInfo {
   locked: boolean;
 }
 
+export interface StructureEntityTypeCount {
+  type: string;
+  count: number;
+}
+
+export interface StructureLayer {
+  name: string;
+  entityTypes: StructureEntityTypeCount[];
+}
+
+export interface StructureResult {
+  layers: StructureLayer[];
+  unknownEntities: StructureEntityTypeCount[];
+}
+
 export class DocumentModel {
   rawFileText: string | null = null;
   fileName: string | null = null;
@@ -77,6 +92,18 @@ export class DocumentModel {
     this.version = version;
   }
 
+  /** Applies an AI-confirmed proposal's indices to the mirror and bumps the
+   * version counter immediately (RESEARCH Pattern 4). The browser's own
+   * subsequent `sync_state` (triggered by its `applyIndices` store action)
+   * will overwrite `version` again with its own counter -- bumping here first
+   * only protects against a second `confirm_proposal` racing ahead of that
+   * round trip and missing this mutation in its staleness check. */
+  applyMutation(action: 'delete' | 'hide', indices: number[]): void {
+    const targetSet = action === 'delete' ? this.deletedEntityIndices : this.hiddenEntityIndices;
+    for (const index of indices) targetSet.add(index);
+    this.version += 1;
+  }
+
   get isLoaded(): boolean {
     return this.dxfData !== null;
   }
@@ -106,5 +133,43 @@ export class DocumentModel {
         locked: flags?.locked ?? false,
       };
     });
+  }
+
+  /** get_structure: the same layer > entity-type > count tree the Structure
+   * Browser renders, plus the unknown-entity report from the raw tag scan.
+   * Deleted entities are excluded (mirrors getLayerInfo's convention);
+   * hidden-but-not-deleted entities are still counted -- hiding is view-only
+   * state, never a data mutation (02-RESEARCH.md D-11). */
+  getStructure(): StructureResult {
+    if (!this.dxfData) return { layers: [], unknownEntities: [] };
+
+    const layerTypeCounts = new Map<string, Map<string, number>>();
+    this.dxfData.entities.forEach((entity, index) => {
+      if (this.deletedEntityIndices.has(index)) return;
+      if (!layerTypeCounts.has(entity.layer)) layerTypeCounts.set(entity.layer, new Map());
+      const typeCounts = layerTypeCounts.get(entity.layer);
+      if (!typeCounts) return;
+      typeCounts.set(entity.type, (typeCounts.get(entity.type) ?? 0) + 1);
+    });
+
+    const layerTableNames = Object.keys(this.dxfData.tables?.layer?.layers ?? {});
+    // Union of the LAYER table (may include layers with zero visible
+    // entities) and any layer name actually referenced by an entity (a DXF
+    // file can reference a layer not declared in the LAYER table).
+    const allLayerNames = new Set([...layerTableNames, ...layerTypeCounts.keys()]);
+
+    const layers: StructureLayer[] = [...allLayerNames].map((name) => {
+      const typeCounts = layerTypeCounts.get(name) ?? new Map<string, number>();
+      return {
+        name,
+        entityTypes: [...typeCounts.entries()].map(([type, count]) => ({ type, count })),
+      };
+    });
+
+    const unknownEntities: StructureEntityTypeCount[] = (this.unknownEntityReport?.unknown ?? []).map(
+      ([type, count]) => ({ type, count }),
+    );
+
+    return { layers, unknownEntities };
   }
 }

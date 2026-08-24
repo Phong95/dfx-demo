@@ -96,6 +96,26 @@ class EngineClient {
 
 const engineClient = new EngineClient(ENGINE_URL);
 
+/** Shared relay/format step every tool handler uses: send a `tool_request`
+ * to the Engine Server, await its `tool_response`, and map it to a
+ * `CallToolResult`. Connection failures (the Engine Server not running yet)
+ * are caught and surfaced as the same `ENGINE_UNREACHABLE_MESSAGE` every
+ * handler would otherwise duplicate (RESEARCH Pattern 1's failure mode). */
+async function callEngineTool(
+  tool: string,
+  params: Record<string, unknown> = {},
+): Promise<CallToolResult> {
+  try {
+    const response = await engineClient.callTool(tool, params);
+    if (response.error) {
+      return errorResult(response.error);
+    }
+    return { content: [{ type: 'text', text: JSON.stringify(response.result, null, 2) }] };
+  } catch (error) {
+    return errorResult(error instanceof Error ? error.message : ENGINE_UNREACHABLE_MESSAGE);
+  }
+}
+
 const server = new McpServer({ name: 'dxf-demo', version: '0.1.0' });
 
 server.registerTool(
@@ -105,17 +125,17 @@ server.registerTool(
       'List all layers in the currently loaded DXF drawing with color, entity count, and frozen/locked state.',
     inputSchema: {},
   },
-  async (): Promise<CallToolResult> => {
-    try {
-      const response = await engineClient.callTool('list_layers', {});
-      if (response.error) {
-        return errorResult(response.error);
-      }
-      return { content: [{ type: 'text', text: JSON.stringify(response.result, null, 2) }] };
-    } catch (error) {
-      return errorResult(error instanceof Error ? error.message : ENGINE_UNREACHABLE_MESSAGE);
-    }
+  async (): Promise<CallToolResult> => callEngineTool('list_layers'),
+);
+
+server.registerTool(
+  'get_structure',
+  {
+    description:
+      'Get the hierarchical structure of the loaded DXF drawing: layers with entity type counts and unknown entity report.',
+    inputSchema: {},
   },
+  async (): Promise<CallToolResult> => callEngineTool('get_structure'),
 );
 
 async function main(): Promise<void> {

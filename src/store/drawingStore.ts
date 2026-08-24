@@ -7,6 +7,7 @@ import type {
   WorkerSuccessResponse,
   WorkerErrorResponse,
 } from '@/dxf/dxf.worker';
+import { syncState } from '@/lib/engineSocket';
 
 export interface ViewerTransform {
   x: number;
@@ -61,6 +62,12 @@ interface DrawingState {
   setSelection: (indices: number[]) => void;
   deleteSelected: () => void;
   hideSelected: () => void;
+  // AI-mutation entry point (Phase 3 RESEARCH Pattern 5): applied by
+  // engineSocket.ts when the Engine Server pushes a confirmed proposal.
+  // Writes into the exact same deletedEntityIndices/hiddenEntityIndices
+  // fields deleteSelected/hideSelected already write, so zundo's existing
+  // partialize covers it with no undo-stack changes needed.
+  applyIndices: (indices: number[], action: 'delete' | 'hide') => void;
 }
 
 export const useDrawingStore = create<DrawingState>()(
@@ -114,6 +121,7 @@ export const useDrawingStore = create<DrawingState>()(
               isLoading: false,
               error: null,
             });
+            syncState();
           } else {
             set({
               isLoading: false,
@@ -211,6 +219,7 @@ export const useDrawingStore = create<DrawingState>()(
           for (const index of state.selectedEntityIndices) nextDeleted.add(index);
           return { deletedEntityIndices: nextDeleted, selectedEntityIndices: new Set() };
         });
+        syncState();
       },
 
       hideSelected: () => {
@@ -219,6 +228,20 @@ export const useDrawingStore = create<DrawingState>()(
           for (const index of state.selectedEntityIndices) nextHidden.add(index);
           return { hiddenEntityIndices: nextHidden, selectedEntityIndices: new Set() };
         });
+        syncState();
+      },
+
+      applyIndices: (indices: number[], action: 'delete' | 'hide') => {
+        set((state) => {
+          const targetSet = new Set(
+            action === 'delete' ? state.deletedEntityIndices : state.hiddenEntityIndices,
+          );
+          for (const index of indices) targetSet.add(index);
+          return action === 'delete'
+            ? { deletedEntityIndices: targetSet }
+            : { hiddenEntityIndices: targetSet };
+        });
+        syncState();
       },
     }),
     {

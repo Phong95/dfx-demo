@@ -20,6 +20,7 @@ import { WebSocketServer } from 'ws';
 import type { WebSocket, RawData } from 'ws';
 import { DocumentModel } from './documentModel';
 import { handleListLayers } from './tools/listLayers';
+import { handleGetStructure } from './tools/getStructure';
 import type { EngineInboundMessage, ToolResponseMessage } from './wsProtocol';
 
 const ENGINE_PORT = Number(process.env.ENGINE_PORT) || 4000;
@@ -69,6 +70,8 @@ function dispatchTool(
   switch (tool) {
     case 'list_layers':
       return { result: handleListLayers(documentModel) };
+    case 'get_structure':
+      return { result: handleGetStructure(documentModel) };
     default:
       return { error: `Unknown tool: ${tool}` };
   }
