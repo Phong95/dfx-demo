@@ -23,14 +23,20 @@ interface DrawingState {
   error: string | null;
   fileName: string | null;
   viewerTransform: ViewerTransform | null;
-  hoverEntityHandle: number | null;
+  // Index into dxfData.entities, not the raw DXF `handle` field -- dxf-parser
+  // only sets `entity.handle` when a group-5 code is present in the source
+  // file, which is not guaranteed (undefined/duplicate handles would break
+  // hover lookups). An array index is always unique and defined.
+  hoverEntityIndex: number | null;
+  selectedEntityIndex: number | null;
 
   loadFile: (file: File) => Promise<void>;
   toggleLayerVisibility: (layerName: string) => void;
   showAllLayers: () => void;
   hideAllLayers: () => void;
   setViewerTransform: (transform: ViewerTransform) => void;
-  setHoverEntityHandle: (handle: number | null) => void;
+  setHoverEntityIndex: (index: number | null) => void;
+  zoomToEntity: (entityIndex: number) => void;
 }
 
 export const useDrawingStore = create<DrawingState>((set) => ({
@@ -43,7 +49,8 @@ export const useDrawingStore = create<DrawingState>((set) => ({
   error: null,
   fileName: null,
   viewerTransform: null,
-  hoverEntityHandle: null,
+  hoverEntityIndex: null,
+  selectedEntityIndex: null,
 
   loadFile: async (file: File) => {
     set({ isLoading: true, error: null });
@@ -132,7 +139,11 @@ export const useDrawingStore = create<DrawingState>((set) => ({
     set({ viewerTransform: transform });
   },
 
-  setHoverEntityHandle: (handle: number | null) => {
-    set({ hoverEntityHandle: handle });
+  setHoverEntityIndex: (index: number | null) => {
+    set({ hoverEntityIndex: index });
+  },
+
+  zoomToEntity: (entityIndex: number) => {
+    set({ selectedEntityIndex: entityIndex });
   },
 }));

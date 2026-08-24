@@ -3,8 +3,10 @@ import { Maximize } from 'lucide-react';
 import { useDrawingStore } from '@/store/drawingStore';
 import { DropZone } from '@/components/DropZone';
 import { LayerPanel } from '@/components/LayerPanel';
+import { StructureBrowser } from '@/components/StructureBrowser';
 import { Stage, type StageHandle } from '@/components/CanvasViewer/Stage';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import './App.css';
 
 function App() {
@@ -38,8 +40,14 @@ function App() {
         </Button>
       </header>
 
-      <aside className="overflow-hidden bg-surface">
-        <LayerPanel />
+      <aside className="flex flex-col overflow-hidden bg-surface">
+        <div className="h-[300px] shrink-0 overflow-hidden">
+          <LayerPanel />
+        </div>
+        <Separator />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <StructureBrowser />
+        </div>
       </aside>
 
       <main className="overflow-hidden bg-background">
