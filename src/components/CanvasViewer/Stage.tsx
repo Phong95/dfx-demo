@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Stage as KonvaStage, Layer as KonvaLayer } from 'react-konva';
+import { Stage as KonvaStage, Layer as KonvaLayer, Rect } from 'react-konva';
 import type Konva from 'konva';
 import type { IEntity } from 'dxf-parser';
 import { useDrawingStore } from '@/store/drawingStore';
@@ -22,8 +22,19 @@ const ACCENT_COLOR = '#3B82F6';
 // (CONTEXT.md D-08: hiding is a view state, not a data mutation).
 const HIDDEN_OPACITY = 0.2;
 const HIDDEN_DASH = [6, 4];
+// Minimum screen-space drag distance (px) to treat a mouse-down/up pair on
+// the background as a box-select drag rather than a click-to-deselect
+// (RESEARCH Pattern 3 / Common Pitfall 5).
+const DRAG_THRESHOLD_PX = 3;
 
 type ColoredEntity = IEntity & { resolvedColor?: string };
+
+interface ScreenRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
   const dxfData = useDrawingStore((state) => state.dxfData);
@@ -37,10 +48,26 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
   const hiddenEntityIndices = useDrawingStore((state) => state.hiddenEntityIndices);
   const toggleSelect = useDrawingStore((state) => state.toggleSelect);
   const clearSelection = useDrawingStore((state) => state.clearSelection);
+  const setSelection = useDrawingStore((state) => state.setSelection);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+
+  // Pan (Space+drag) and box-select (plain drag on background) both live as
+  // local/ref state -- never in the zustand store (RESEARCH Pitfall 5): the
+  // rubber band's live coordinates would otherwise spam the undo history
+  // with one entry per mousemove frame. Only the box-select's *final* result
+  // is committed via setSelection() on mouseup.
+  const spaceHeldRef = useRef(false);
+  const panStateRef = useRef<{
+    startPointerX: number;
+    startPointerY: number;
+    startStageX: number;
+    startStageY: number;
+  } | null>(null);
+  const rubberStartRef = useRef<{ x: number; y: number } | null>(null);
+  const [rubberRect, setRubberRect] = useState<ScreenRect | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -53,6 +80,32 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     });
     observer.observe(el);
     return () => observer.disconnect();
+  }, []);
+
+  // Space-held tracking for the pan-mode migration (RESEARCH: panning moves
+  // from native stage dragging to Space+left-drag, freeing plain left-drag
+  // for box-select). Ignore repeats from OS key-repeat and guard against
+  // stealing Space from text inputs elsewhere in the app.
+  useEffect(() => {
+    function isTypingTarget(target: EventTarget | null): boolean {
+      const el = target as HTMLElement | null;
+      return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.code !== 'Space' || isTypingTarget(e.target)) return;
+      spaceHeldRef.current = true;
+      e.preventDefault(); // prevent page-scroll from breaking the pan gesture
+    }
+    function handleKeyUp(e: KeyboardEvent) {
+      if (e.code !== 'Space') return;
+      spaceHeldRef.current = false;
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   const fitToView = useCallback(() => {
@@ -143,16 +196,104 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     setViewerTransform({ ...newPos, scale: newScale });
   };
 
-  const handleDragEnd = () => {
+  // Pan (Space+drag) and box-select share the same mousedown/mousemove/mouseup
+  // trio on the Stage itself -- the KonvaStage `draggable` prop is removed so
+  // plain left-drag on empty canvas is free for the rubber band instead
+  // (RESEARCH Pattern 3, Common Pitfall 3: the official Konva rubber-band
+  // recipe's `haveIntersection` would select too much, so this project uses
+  // full-containment bbox checks against computeBoundsForEntity() instead).
+  const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
     const stage = stageRef.current;
     if (!stage) return;
-    setViewerTransform({ x: stage.x(), y: stage.y(), scale: stage.scaleX() });
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    if (spaceHeldRef.current) {
+      panStateRef.current = {
+        startPointerX: pointer.x,
+        startPointerY: pointer.y,
+        startStageX: stage.x(),
+        startStageY: stage.y(),
+      };
+      return;
+    }
+
+    // Only start a rubber band from the background -- a mousedown that lands
+    // on a shape is left alone so Konva's own click detection on that shape
+    // keeps working for click/shift-click select (unchanged from Task 1).
+    if (e.target !== stage) return;
+
+    rubberStartRef.current = { x: pointer.x, y: pointer.y };
+    setRubberRect({ x: pointer.x, y: pointer.y, width: 0, height: 0 });
   };
 
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    // Background click (not a shape) deselects (CONTEXT.md D-01).
-    if (e.target === e.target.getStage()) {
-      clearSelection();
+  const handleStageMouseMove = () => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    if (panStateRef.current) {
+      const pan = panStateRef.current;
+      const dx = pointer.x - pan.startPointerX;
+      const dy = pointer.y - pan.startPointerY;
+      stage.position({ x: pan.startStageX + dx, y: pan.startStageY + dy });
+      stage.batchDraw();
+      return;
+    }
+
+    if (rubberStartRef.current) {
+      const start = rubberStartRef.current;
+      setRubberRect({
+        x: Math.min(start.x, pointer.x),
+        y: Math.min(start.y, pointer.y),
+        width: Math.abs(pointer.x - start.x),
+        height: Math.abs(pointer.y - start.y),
+      });
+    }
+  };
+
+  const handleStageMouseUp = () => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    if (panStateRef.current) {
+      setViewerTransform({ x: stage.x(), y: stage.y(), scale: stage.scaleX() });
+      panStateRef.current = null;
+      return;
+    }
+
+    if (rubberStartRef.current) {
+      rubberStartRef.current = null;
+      const rect = rubberRect;
+      setRubberRect(null);
+
+      // Below the drag threshold -- treat as a plain click on empty canvas
+      // (deselect), not a box-select (CONTEXT.md D-01).
+      if (!rect || (rect.width <= DRAG_THRESHOLD_PX && rect.height <= DRAG_THRESHOLD_PX)) {
+        clearSelection();
+        return;
+      }
+
+      // Screen-space rectangle -> world (canvas) space, using the same
+      // inverse-transform math as handleWheel (RESEARCH Pattern 3).
+      const scale = stage.scaleX();
+      const worldMinX = (rect.x - stage.x()) / scale;
+      const worldMinY = (rect.y - stage.y()) / scale;
+      const worldMaxX = (rect.x + rect.width - stage.x()) / scale;
+      const worldMaxY = (rect.y + rect.height - stage.y()) / scale;
+
+      const matches: number[] = [];
+      (dxfData?.entities ?? []).forEach((entity, index) => {
+        if (deletedEntityIndices.has(index)) return;
+        if (!layerVisibility[entity.layer]) return;
+        const box = computeBoundsForEntity(entity);
+        if (!box) return; // unrendered types (no bbox) can never be box-selected
+        const fullyContained =
+          box.minX >= worldMinX && box.maxX <= worldMaxX && box.minY >= worldMinY && box.maxY <= worldMaxY;
+        if (fullyContained) matches.push(index);
+      });
+      setSelection(matches);
     }
   };
 
@@ -174,10 +315,10 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
           ref={stageRef}
           width={size.width}
           height={size.height}
-          draggable
           onWheel={handleWheel}
-          onDragEnd={handleDragEnd}
-          onClick={handleStageClick}
+          onMouseDown={handleStageMouseDown}
+          onMouseMove={handleStageMouseMove}
+          onMouseUp={handleStageMouseUp}
         >
           {layerNames.map((layerName) => {
             if (!layerVisibility[layerName]) return null;
@@ -228,6 +369,20 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
                   />
                 );
               })}
+            </KonvaLayer>
+          )}
+          {rubberRect && (
+            <KonvaLayer listening={false}>
+              <Rect
+                x={rubberRect.x}
+                y={rubberRect.y}
+                width={rubberRect.width}
+                height={rubberRect.height}
+                stroke={ACCENT_COLOR}
+                strokeWidth={1}
+                fill={ACCENT_COLOR}
+                opacity={0.1}
+              />
             </KonvaLayer>
           )}
         </KonvaStage>
