@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { IDxf } from 'dxf-parser';
-import type { RawTagScanResult } from '@/dxf/rawTagScan';
+import type { RawTagScanResult, LayerFlags } from '@/dxf/rawTagScan';
 import type {
   WorkerParseRequest,
   WorkerSuccessResponse,
@@ -18,6 +18,7 @@ interface DrawingState {
   dxfData: IDxf | null;
   unknownEntityReport: RawTagScanResult | null;
   layerVisibility: Record<string, boolean>;
+  layerFlags: Record<string, LayerFlags>;
   isLoading: boolean;
   error: string | null;
   fileName: string | null;
@@ -26,6 +27,8 @@ interface DrawingState {
 
   loadFile: (file: File) => Promise<void>;
   toggleLayerVisibility: (layerName: string) => void;
+  showAllLayers: () => void;
+  hideAllLayers: () => void;
   setViewerTransform: (transform: ViewerTransform) => void;
   setHoverEntityHandle: (handle: number | null) => void;
 }
@@ -35,6 +38,7 @@ export const useDrawingStore = create<DrawingState>((set) => ({
   dxfData: null,
   unknownEntityReport: null,
   layerVisibility: {},
+  layerFlags: {},
   isLoading: false,
   error: null,
   fileName: null,
@@ -70,6 +74,7 @@ export const useDrawingStore = create<DrawingState>((set) => ({
           unknownEntityReport: data.unknownReport,
           fileName: data.fileName,
           layerVisibility,
+          layerFlags: data.unknownReport.layerFlags,
           isLoading: false,
           error: null,
         });
@@ -101,6 +106,26 @@ export const useDrawingStore = create<DrawingState>((set) => ({
         [layerName]: !state.layerVisibility[layerName],
       },
     }));
+  },
+
+  showAllLayers: () => {
+    set((state) => {
+      const layerVisibility: Record<string, boolean> = {};
+      for (const name of Object.keys(state.layerVisibility)) {
+        layerVisibility[name] = true;
+      }
+      return { layerVisibility };
+    });
+  },
+
+  hideAllLayers: () => {
+    set((state) => {
+      const layerVisibility: Record<string, boolean> = {};
+      for (const name of Object.keys(state.layerVisibility)) {
+        layerVisibility[name] = false;
+      }
+      return { layerVisibility };
+    });
   },
 
   setViewerTransform: (transform: ViewerTransform) => {

@@ -7,6 +7,12 @@
  * independent of dxf-parser, counting every group-code-0 entity-type value seen
  * inside ENTITIES and BLOCKS sections, so nothing is ever silently dropped from the
  * report even if dxf-parser drops it from `dxf.entities`.
+ *
+ * It also scans the TABLES section's LAYER table for the raw group-70 flag value
+ * per layer -- dxf-parser's own `ILayer` has no `locked` field at all (RESEARCH
+ * Pitfall #5): only bits 1/2 (frozen) are read by dxf-parser, bit 4 (locked) is
+ * never checked. This scan reads group-70 directly and computes both frozen and
+ * locked from the same raw value, independent of dxf-parser's partial extraction.
  */
 
 // Exact EntityName union dxf-parser@1.1.2 registers handlers for
@@ -31,14 +37,28 @@ const SUPPORTED_TYPES = new Set([
   'VERTEX',
 ]);
 
+export interface LayerFlags {
+  frozen: boolean;
+  locked: boolean;
+}
+
 export interface RawTagScanResult {
   typeCounts: Map<string, number>;
   unknown: Array<[string, number]>;
+  layerFlags: Record<string, LayerFlags>;
+}
+
+function flagsFromGroup70(rawFlags: number): LayerFlags {
+  return {
+    frozen: (rawFlags & 1) !== 0 || (rawFlags & 2) !== 0,
+    locked: (rawFlags & 4) !== 0,
+  };
 }
 
 export function rawTagScan(dxfText: string): RawTagScanResult {
   const lines = dxfText.split(/\r\n|\r|\n/);
   const typeCounts = new Map<string, number>();
+  const layerFlags: Record<string, LayerFlags> = {};
 
   // A DXF SECTION is entered via the pair (0, "SECTION") immediately followed
   // by (2, "<section name>") -- the section name is carried on group code 2,
@@ -48,6 +68,22 @@ export function rawTagScan(dxfText: string): RawTagScanResult {
   // are excluded from the type tally.
   let currentSection: string | null = null;
   let inBlockDef = false;
+
+  // TABLES/LAYER tracking. A TABLE is entered via (0, "TABLE") + (2, "<table name>"),
+  // same two-pair pattern as SECTION. Each layer record starts at (0, "LAYER") and
+  // runs until the next (0, ...) pair; its name is on group 2, its flags on group 70.
+  let currentTable: string | null = null;
+  let pendingLayerName: string | null = null;
+  let pendingLayerRawFlags = 0;
+  let inLayerRecord = false;
+
+  const commitPendingLayer = () => {
+    if (pendingLayerName !== null) {
+      layerFlags[pendingLayerName] = flagsFromGroup70(pendingLayerRawFlags);
+    }
+    pendingLayerName = null;
+    pendingLayerRawFlags = 0;
+  };
 
   for (let i = 0; i < lines.length - 1; i += 2) {
     const code = Number(lines[i]);
@@ -62,8 +98,11 @@ export function rawTagScan(dxfText: string): RawTagScanResult {
     }
 
     if (code === 0 && value === 'ENDSEC') {
+      if (inLayerRecord) commitPendingLayer();
       currentSection = null;
       inBlockDef = false;
+      currentTable = null;
+      inLayerRecord = false;
       continue;
     }
 
@@ -84,6 +123,39 @@ export function rawTagScan(dxfText: string): RawTagScanResult {
       if (inBlockDef) {
         typeCounts.set(value, (typeCounts.get(value) ?? 0) + 1);
       }
+      continue;
+    }
+
+    if (currentSection === 'TABLES') {
+      if (code === 0 && value === 'TABLE') {
+        const nextCode = Number(lines[i + 2]);
+        const nextValue = lines[i + 3]?.trim();
+        currentTable = nextCode === 2 ? (nextValue ?? null) : null;
+        continue;
+      }
+
+      if (code === 0 && value === 'ENDTAB') {
+        if (inLayerRecord) commitPendingLayer();
+        currentTable = null;
+        inLayerRecord = false;
+        continue;
+      }
+
+      if (currentTable === 'LAYER') {
+        if (code === 0 && value === 'LAYER') {
+          if (inLayerRecord) commitPendingLayer();
+          inLayerRecord = true;
+          continue;
+        }
+        if (inLayerRecord && code === 2) {
+          pendingLayerName = value;
+          continue;
+        }
+        if (inLayerRecord && code === 70) {
+          pendingLayerRawFlags = Number(value) || 0;
+          continue;
+        }
+      }
     }
   }
 
@@ -91,5 +163,5 @@ export function rawTagScan(dxfText: string): RawTagScanResult {
     ([type]) => !SUPPORTED_TYPES.has(type),
   );
 
-  return { typeCounts, unknown };
+  return { typeCounts, unknown, layerFlags };
 }
