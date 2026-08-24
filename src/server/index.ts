@@ -17,6 +17,7 @@ import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { WebSocket } from 'ws';
+import * as z from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ToolRequestMessage, ToolResponseMessage } from './wsProtocol';
 
@@ -136,6 +137,65 @@ server.registerTool(
     inputSchema: {},
   },
   async (): Promise<CallToolResult> => callEngineTool('get_structure'),
+);
+
+server.registerTool(
+  'apply_cleanup_rule',
+  {
+    description:
+      'Preview a delete/hide rule against a layer and/or entity type filter. Returns a proposal_id and an ' +
+      'affected-entity summary -- nothing is applied until confirm_proposal is called with that proposal_id.',
+    inputSchema: {
+      action: z.enum(['delete', 'hide']),
+      filter: z.object({
+        layer: z.string().optional(),
+        entityType: z.string().optional(),
+      }),
+    },
+  },
+  async ({ action, filter }): Promise<CallToolResult> =>
+    callEngineTool('apply_cleanup_rule', { action, filter }),
+);
+
+server.registerTool(
+  'remove_selection',
+  {
+    description:
+      'Preview a delete/hide of specific entity indices. Returns a proposal_id and an affected-entity summary -- ' +
+      'nothing is applied until confirm_proposal is called with that proposal_id.',
+    inputSchema: {
+      indices: z.array(z.number().int().nonnegative()).max(50_000),
+      action: z.enum(['delete', 'hide']),
+    },
+  },
+  async ({ indices, action }): Promise<CallToolResult> =>
+    callEngineTool('remove_selection', { indices, action }),
+);
+
+server.registerTool(
+  'confirm_proposal',
+  {
+    description:
+      'Apply a previously previewed proposal (from apply_cleanup_rule or remove_selection) by its proposal_id. ' +
+      'Rejects the proposal if the drawing has changed since it was previewed -- request a new preview instead.',
+    inputSchema: {
+      proposalId: z.string(),
+    },
+  },
+  async ({ proposalId }): Promise<CallToolResult> => callEngineTool('confirm_proposal', { proposalId }),
+);
+
+server.registerTool(
+  'export_dxf',
+  {
+    description:
+      'Export the currently loaded, cleaned-up DXF drawing to a file path (must end in .dxf). Deleted entities are ' +
+      'removed byte-for-byte via the original file text; hidden-but-not-deleted entities are kept.',
+    inputSchema: {
+      filePath: z.string(),
+    },
+  },
+  async ({ filePath }): Promise<CallToolResult> => callEngineTool('export_dxf', { filePath }),
 );
 
 async function main(): Promise<void> {

@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useDrawingStore } from '@/store/drawingStore';
 import { buildEntityTagRanges } from '@/dxf/entityTagRanges';
-import { filterDxfText, validateExport, saveDxf } from '@/dxf/exportDxf';
+import { filterDxfText, validateExport } from '@/dxf/exportDxf';
+import { saveDxf } from '@/dxf/saveDxf';
 
 // Batch-delete confirmation threshold (CONTEXT.md D-07 / 02-UI-SPEC.md):
 // 1-9 entity deletes proceed immediately (undo is the safety net); 10+

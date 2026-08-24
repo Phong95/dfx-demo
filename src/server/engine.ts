@@ -21,7 +21,11 @@ import type { WebSocket, RawData } from 'ws';
 import { DocumentModel } from './documentModel';
 import { handleListLayers } from './tools/listLayers';
 import { handleGetStructure } from './tools/getStructure';
-import type { EngineInboundMessage, ToolResponseMessage } from './wsProtocol';
+import { handleApplyCleanupRule, type CleanupFilter } from './tools/applyCleanupRule';
+import { handleRemoveSelection } from './tools/removeSelection';
+import { handleConfirmProposal } from './tools/confirmProposal';
+import { handleExportDxf } from './tools/exportDxf';
+import type { ApplyMutationMessage, EngineInboundMessage, ToolResponseMessage } from './wsProtocol';
 
 const ENGINE_PORT = Number(process.env.ENGINE_PORT) || 4000;
 const HOST = '127.0.0.1';
@@ -44,6 +48,19 @@ function isAllowedOrigin(origin: string): boolean {
 
 const documentModel = new DocumentModel();
 
+// The single active browser connection (RESEARCH Open Question 3: "last
+// connected browser tab wins", an accepted single-user-local-tool
+// limitation). Set whenever a socket sends `sync_state`; cleared on that
+// socket's close. confirm_proposal pushes `apply_mutation` here so an
+// AI-confirmed change reaches the viewer in real time.
+let browserSocket: WebSocket | null = null;
+
+function pushApplyMutation(message: ApplyMutationMessage): void {
+  if (browserSocket && browserSocket.readyState === browserSocket.OPEN) {
+    browserSocket.send(JSON.stringify(message));
+  }
+}
+
 const wss = new WebSocketServer({
   host: HOST,
   port: ENGINE_PORT,
@@ -59,10 +76,10 @@ wss.on('error', (error: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 
-function dispatchTool(
+async function dispatchTool(
   tool: string,
-  _params: Record<string, unknown>,
-): { result?: unknown; error?: string } {
+  params: Record<string, unknown>,
+): Promise<{ result?: unknown; error?: string }> {
   if (!documentModel.isLoaded) {
     return { error: 'No drawing loaded. Please load a DXF file in the viewer first.' };
   }
@@ -70,8 +87,33 @@ function dispatchTool(
   switch (tool) {
     case 'list_layers':
       return { result: handleListLayers(documentModel) };
+
     case 'get_structure':
       return { result: handleGetStructure(documentModel) };
+
+    case 'apply_cleanup_rule': {
+      const { action, filter } = params as { action: 'delete' | 'hide'; filter: CleanupFilter };
+      return { result: handleApplyCleanupRule(documentModel, action, filter) };
+    }
+
+    case 'remove_selection': {
+      const { indices, action } = params as { indices: number[]; action: 'delete' | 'hide' };
+      const result = handleRemoveSelection(documentModel, indices, action);
+      return 'error' in result ? { error: result.error } : { result };
+    }
+
+    case 'confirm_proposal': {
+      const { proposalId } = params as { proposalId: string };
+      const result = handleConfirmProposal(documentModel, proposalId, pushApplyMutation);
+      return 'error' in result ? { error: result.error } : { result };
+    }
+
+    case 'export_dxf': {
+      const { filePath } = params as { filePath: string };
+      const result = await handleExportDxf(documentModel, filePath);
+      return 'error' in result ? { error: result.error } : { result };
+    }
+
     default:
       return { error: `Unknown tool: ${tool}` };
   }
@@ -97,20 +139,26 @@ wss.on('connection', (socket: WebSocket) => {
         message.hiddenEntityIndices,
         message.version,
       );
+      browserSocket = socket; // this socket just identified itself as the browser leg
       return;
     }
 
     if (message.type === 'tool_request') {
-      const { result, error } = dispatchTool(message.tool, message.params);
-      const response: ToolResponseMessage = {
-        type: 'tool_response',
-        requestId: message.requestId,
-        result,
-        error,
-      };
-      socket.send(JSON.stringify(response));
+      void dispatchTool(message.tool, message.params).then(({ result, error }) => {
+        const response: ToolResponseMessage = {
+          type: 'tool_response',
+          requestId: message.requestId,
+          result,
+          error,
+        };
+        socket.send(JSON.stringify(response));
+      });
       return;
     }
+  });
+
+  socket.on('close', () => {
+    if (browserSocket === socket) browserSocket = null;
   });
 
   socket.on('error', (error: Error) => {
