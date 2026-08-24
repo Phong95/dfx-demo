@@ -12,17 +12,17 @@ Engineers can load a structural DXF drawing, clean up unwanted annotations/dimen
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Load and parse DXF files, exposing layers, objects, and structure — v1
+- ✓ Render DXF in a web viewer with shapes and layer colors — v1
+- ✓ Browse DXF structure by layers, object types, and categories — v1
+- ✓ Select elements for cleanup by layer name or object type — v1
+- ✓ AI-assisted cleanup via MCP server — user describes intent, AI executes removal/retention — v1
+- ✓ Export cleaned DXF file back to disk — v1
+- ✓ MCP server with tools for Claude Desktop to read, analyze, and modify DXF content — v1
 
 ### Active
 
-- [ ] Load and parse DXF files, exposing layers, objects, and structure
-- [ ] Render DXF in a web viewer with shapes and layer colors (not full CAD fidelity, but more than wireframe)
-- [ ] Browse DXF structure by layers, object types, and categories
-- [ ] Select elements for cleanup by layer name or object type
-- [ ] AI-assisted cleanup via MCP server — user describes intent, AI executes removal/retention
-- [ ] Export cleaned DXF file back to disk
-- [ ] MCP server with tools for Claude Desktop to read, analyze, and modify DXF content
+(None yet — define for next milestone)
 
 ### Out of Scope
 
@@ -72,5 +72,9 @@ This document evolves at phase transitions and milestone boundaries.
 3. Audit Out of Scope — reasons still valid?
 4. Update Context with current state
 
+## Current State
+
+Shipped v1 MVP with ~4,500 LOC TypeScript across 51 source files. Tech stack: React 19, TypeScript 6.0.3, Vite 8.2.2, Konva/react-konva, dxf-parser 1.1.2, zustand + zundo, @modelcontextprotocol/sdk 1.30.0. All 17 v1 requirements validated. Full load-clean-export loop working both manually and via AI (Claude Desktop + MCP).
+
 ---
-*Last updated: 2026-08-24 after initialization*
+*Last updated: 2026-08-24 after v1 milestone*
