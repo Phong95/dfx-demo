@@ -37,14 +37,15 @@ export function bulgeToArcPoints(
   const dy = p2.y - p1.y;
   const nx = -dy / chord;
   const ny = dx / chord;
-  const centerX = midX - nx * (radius - sagitta * Math.sign(bulge));
-  const centerY = midY - ny * (radius - sagitta * Math.sign(bulge));
+  const centerX = midX + nx * (radius - sagitta);
+  const centerY = midY + ny * (radius - sagitta);
   const startAngle = Math.atan2(p1.y - centerY, p1.x - centerX);
+  const absR = Math.abs(radius);
 
   const points: Point2D[] = [];
   for (let i = 0; i <= segments; i++) {
     const a = startAngle + (theta * i) / segments;
-    points.push({ x: centerX + radius * Math.cos(a), y: centerY + radius * Math.sin(a) });
+    points.push({ x: centerX + absR * Math.cos(a), y: centerY + absR * Math.sin(a) });
   }
   return points;
 }
