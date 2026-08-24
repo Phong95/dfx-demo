@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n vite,engine -c blue,green --kill-others-on-fail \"vite\" \"tsx --tsconfig tsconfig.server.json watch src/server/engine.ts\"",
+    "dev": "concurrently -n vite,engine -c blue,green --kill-others-on-fail \"vite\" \"tsx watch --tsconfig tsconfig.server.json src/server/engine.ts\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
