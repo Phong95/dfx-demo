@@ -7,17 +7,17 @@
 
 ### DXF Parsing
 
-- [ ] **PARSE-01**: Parse DXF file into structured layers, entities, and blocks
-- [ ] **PARSE-02**: Resolve BYLAYER/BYBLOCK color inheritance centrally at parse time
-- [ ] **PARSE-03**: Report unsupported/unknown entities with counts (never silently drop)
-- [ ] **PARSE-04**: Preserve raw DXF tag stream alongside semantic structure for lossless export
+- [x] **PARSE-01**: Parse DXF file into structured layers, entities, and blocks
+- [x] **PARSE-02**: Resolve BYLAYER/BYBLOCK color inheritance centrally at parse time
+- [x] **PARSE-03**: Report unsupported/unknown entities with counts (never silently drop)
+- [x] **PARSE-04**: Preserve raw DXF tag stream alongside semantic structure for lossless export
 
 ### Viewer
 
-- [ ] **VIEW-01**: Render DXF entities on canvas with layer colors (LINE, ARC, CIRCLE, LWPOLYLINE, TEXT, MTEXT, INSERT, DIMENSION, SPLINE)
-- [ ] **VIEW-02**: Pan, zoom, and fit-to-view navigation
-- [ ] **VIEW-03**: Layer panel with show/hide toggles per layer
-- [ ] **VIEW-04**: Structure browser to navigate by layers and entity types
+- [x] **VIEW-01**: Render DXF entities on canvas with layer colors (LINE, ARC, CIRCLE, LWPOLYLINE, TEXT, MTEXT, INSERT, DIMENSION, SPLINE)
+- [x] **VIEW-02**: Pan, zoom, and fit-to-view navigation
+- [x] **VIEW-03**: Layer panel with show/hide toggles per layer
+- [x] **VIEW-04**: Structure browser to navigate by layers and entity types
 
 ### Selection & Cleanup
 
@@ -70,14 +70,14 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PARSE-01 | Phase 1 | Pending |
-| PARSE-02 | Phase 1 | Pending |
-| PARSE-03 | Phase 1 | Pending |
-| PARSE-04 | Phase 1 | Pending |
-| VIEW-01 | Phase 1 | Pending |
-| VIEW-02 | Phase 1 | Pending |
-| VIEW-03 | Phase 1 | Pending |
-| VIEW-04 | Phase 1 | Pending |
+| PARSE-01 | Phase 1 | Complete |
+| PARSE-02 | Phase 1 | Complete |
+| PARSE-03 | Phase 1 | Complete |
+| PARSE-04 | Phase 1 | Complete |
+| VIEW-01 | Phase 1 | Complete |
+| VIEW-02 | Phase 1 | Complete |
+| VIEW-03 | Phase 1 | Complete |
+| VIEW-04 | Phase 1 | Complete |
 | CLEAN-01 | Phase 2 | Pending |
 | CLEAN-02 | Phase 2 | Pending |
 | CLEAN-03 | Phase 2 | Pending |
@@ -95,5 +95,5 @@
 
 ---
 *Requirements defined: 2026-08-24*
-*Last updated: 2026-08-24 after roadmap creation*
+*Last updated: 2026-08-24 after Phase 1 Plan 02 execution (all 8 Phase 1 requirements complete)*
 </content>

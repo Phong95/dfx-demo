@@ -13,7 +13,7 @@ DXF Demo takes an engineer from "I have a messy structural DXF from another firm
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Load & Browse a DXF Drawing** - Parse a DXF into layers/entities/blocks with resolved colors and an unknown-entity report, and render it in a pannable, zoomable web viewer with a layer panel and structure browser.
+- [x] **Phase 1: Load & Browse a DXF Drawing** - Parse a DXF into layers/entities/blocks with resolved colors and an unknown-entity report, and render it in a pannable, zoomable web viewer with a layer panel and structure browser.
 - [ ] **Phase 2: Manual Cleanup & Export** - Select entities by click or box, delete/hide them with full undo/redo, and export a cleaned DXF that preserves everything untouched byte-for-byte — completing the core load-clean-export loop by hand.
 - [ ] **Phase 3: AI-Assisted Cleanup via MCP** - Claude Desktop connects over MCP to inspect the loaded drawing, propose cleanup operations from natural-language intent, and apply them only after a preview/dry-run confirmation.
 
@@ -37,11 +37,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Walking Skeleton tracer: scaffold + DXF parsing pipeline + LINE rendering + layer panel + pan/zoom/fit
+- [x] 01-01-PLAN.md — Walking Skeleton tracer: scaffold + DXF parsing pipeline + LINE rendering + layer panel + pan/zoom/fit
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — Full entity rendering (9 types) + complete layer panel + structure browser + hover/click interactions
+- [x] 01-02-PLAN.md — Full entity rendering (9 types) + complete layer panel + structure browser + hover/click interactions
 
 **UI hint**: yes
 
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Load & Browse a DXF Drawing | 0/TBD | Not started | - |
+| 1. Load & Browse a DXF Drawing | 2/2 | Complete | 2026-08-24 |
 | 2. Manual Cleanup & Export | 0/TBD | Not started | - |
 | 3. AI-Assisted Cleanup via MCP | 0/TBD | Not started | - |
 </content>

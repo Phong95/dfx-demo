@@ -3,17 +3,17 @@ gsd_state_version: 1.0
 current_phase: 1
 current_phase_name: Load & Browse a DXF Drawing
 status: executing
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-08-24T06:07:59.507Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-08-24T07:05:56.000Z"
 last_activity: 2026-08-24
-last_activity_desc: Roadmap created (3 phases, 17/17 v1 requirements mapped)
-state_head: 02c41c0851f10965cfcb4aa0fcff49ec29ebd2b6
+last_activity_desc: Phase 1 Plan 02 executed — full entity rendering (9 types), complete layer panel, virtualized structure browser
+state_head: 8c6edd980cac1b8f5f4dc93f47f06b3952b8db2f
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 2
+  percent: 33
 ---
 
 # Project State
@@ -27,31 +27,31 @@ See: .planning/PROJECT.md (updated 2026-08-24)
 
 ## Current Position
 
-Phase: 1 (Load & Browse a DXF Drawing) — READY TO EXECUTE
-Plan: 0 of TBD in current phase
-Status: Ready to execute
-Last activity: 2026-08-24 — Roadmap created (3 phases, 17/17 v1 requirements mapped)
+Phase: 1 (Load & Browse a DXF Drawing) — COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase 1 complete, ready to plan Phase 2
+Last activity: 2026-08-24 — Phase 1 Plan 02 executed (full entity rendering, layer panel, structure browser)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
-- Average duration: - min
-- Total execution time: 0 hours
+- Total plans completed: 2
+- Average duration: ~25 min
+- Total execution time: ~1 hour (approx, not precisely tracked without gsd-tools)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1. Load & Browse a DXF Drawing | 2 | ~50 min | ~25 min |
 
 **Recent Trend:**
 
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 01-01, 01-02
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -65,16 +65,20 @@ Recent decisions affecting current work:
 - Research: single Node "Engine Server" process exposes MCP (stdio) and HTTP/WS to a shared in-memory Document Model — manual and AI edits use the same Mutation Engine, never diverge.
 - Research: export is a surgical tag-stream filter over the original DXF text, never a full parse-mutate-regenerate — preserves untouched content byte-for-byte and protects entities dxf-parser doesn't fully model.
 - Research: build order is read (Phase 1) → manual mutate/export (Phase 2) → AI wraps mutate (Phase 3), so DXF fidelity risk is proven before the AI layer is wired in.
+- Phase 1 Plan 02: entity/hover/selection identity uses array index into `dxfData.entities`, not DXF `entity.handle` — dxf-parser only sets `handle` from a raw group-5 code, which is not guaranteed present.
+- Phase 1 Plan 02: DXF Y-up→canvas Y-down conversion is per-point/per-position negation throughout (never a global Layer/Stage `-1` scale flip) — established convention all future entity/shape work should follow.
+- Phase 1 Plan 02: bounding-box computation (`src/dxf/entityBounds.ts`) covers all 9 rendered entity types, not just LINE, so fit-to-view/zoom-to-entity remain correct as entity coverage grows.
 
 ### Pending Todos
 
-None yet.
+- Run interactive UAT (real multi-layer, multi-entity-type DXF file) against Phase 1's full feature set before considering Phase 1 fully closed out — this execution environment had no browser/screenshot automation available, so Task 3's `<human-check>` step (expand/collapse, click-to-zoom, virtualized scroll, Unknown section) and general visual-correctness checks (bulge-to-arc sign, INSERT/DIMENSION rendering) were not exercised interactively. See `01-02-SUMMARY.md` coverage block.
 
 ### Blockers/Concerns
 
-- No real sample DXF files have been tested against dxf-parser's entity coverage yet — validate during Phase 1 build (research SUMMARY.md gap).
+- No real sample DXF files have been tested against dxf-parser's entity coverage yet — validate during Phase 1 build (research SUMMARY.md gap). Still open: only a minimal 3-LINE hand-authored test fixture has been used so far.
 - Surgical tag-stream filter/writer has no reference implementation to draw from — treat as first-class design task in Phase 2, budget extra time for round-trip testing.
 - AI-driven deletion with no preview/undo path is a data-loss/trust risk — Phase 3 MCP tools must be plan-then-execute (dry-run/confirm) from the first tool written, not retrofitted.
+- `gsd-tools.cjs` was unavailable in the Plan 01-02 execution environment (not found in worktree or main repo) — STATE.md/ROADMAP.md/REQUIREMENTS.md were updated manually for both 01-01 and 01-02 in this pass. Verify `gsd-tools` availability before the next phase's execution to restore automated state tracking.
 
 ## Deferred Items
 
@@ -86,7 +90,7 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-08-24T05:22:42.858Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-load-browse-a-dxf-drawing/01-UI-SPEC.md
+Last session: 2026-08-24T07:05:56.000Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: None
 </content>
