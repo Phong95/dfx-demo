@@ -21,10 +21,10 @@
 
 ### Selection & Cleanup
 
-- [ ] **CLEAN-01**: Click-to-select entities with properties panel showing entity details
-- [ ] **CLEAN-02**: Multi-select via box select and shift-click
-- [ ] **CLEAN-03**: Delete or hide selected entities from the drawing
-- [ ] **CLEAN-04**: Undo/redo stack for all cleanup actions
+- [x] **CLEAN-01**: Click-to-select entities with properties panel showing entity details
+- [x] **CLEAN-02**: Multi-select via box select and shift-click
+- [x] **CLEAN-03**: Delete or hide selected entities from the drawing
+- [x] **CLEAN-04**: Undo/redo stack for all cleanup actions
 
 ### Export
 
@@ -78,10 +78,10 @@
 | VIEW-02 | Phase 1 | Complete |
 | VIEW-03 | Phase 1 | Complete |
 | VIEW-04 | Phase 1 | Complete |
-| CLEAN-01 | Phase 2 | Pending |
-| CLEAN-02 | Phase 2 | Pending |
-| CLEAN-03 | Phase 2 | Pending |
-| CLEAN-04 | Phase 2 | Pending |
+| CLEAN-01 | Phase 2 | Complete |
+| CLEAN-02 | Phase 2 | Complete |
+| CLEAN-03 | Phase 2 | Complete |
+| CLEAN-04 | Phase 2 | Complete |
 | EXPORT-01 | Phase 2 | Pending |
 | EXPORT-02 | Phase 2 | Pending |
 | MCP-01 | Phase 3 | Pending |
@@ -89,6 +89,7 @@
 | MCP-03 | Phase 3 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 17 total
 - Mapped to phases: 17
 - Unmapped: 0
