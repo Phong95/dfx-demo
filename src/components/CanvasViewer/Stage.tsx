@@ -171,6 +171,7 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
   }, [focusedEntityIndex]);
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+    const t0 = performance.now();
     e.evt.preventDefault();
     const stage = stageRef.current;
     if (!stage) return;
@@ -198,9 +199,17 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
       layer.listening(false);
     }
 
+    const t1 = performance.now();
     stage.scale({ x: newScale, y: newScale });
     stage.position(newPos);
     stage.batchDraw();
+    const t2 = performance.now();
+
+    const entityCount = dxfData?.entities?.length ?? 0;
+    const konvaChildCount = layer?.children?.length ?? 0;
+    console.log(
+      `[zoom] total: ${(t2 - t0).toFixed(1)}ms | batchDraw: ${(t2 - t1).toFixed(1)}ms | entities: ${entityCount} | konva children: ${konvaChildCount} | scale: ${newScale.toFixed(4)}`
+    );
 
     if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
     zoomTimerRef.current = setTimeout(() => {
