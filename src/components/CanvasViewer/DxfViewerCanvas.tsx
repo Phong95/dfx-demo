@@ -3,6 +3,16 @@ import { DxfViewer } from 'dxf-viewer';
 import * as THREE from 'three';
 import { useDrawingStore } from '@/store/drawingStore';
 
+const DARK_BG = 0x111113;
+const LIGHT_BG = 0xf5f5f5;
+
+function isDarkMode(): boolean {
+  const cl = document.documentElement.classList;
+  if (cl.contains('dark')) return true;
+  if (cl.contains('light')) return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 export interface DxfViewerCanvasHandle {
   fitToView: () => void;
 }
@@ -31,18 +41,14 @@ export const DxfViewerCanvas = forwardRef<DxfViewerCanvasHandle>(
       const el = containerRef.current;
       if (!el) return;
 
-      const isDark =
-        document.documentElement.dataset.theme === 'dark' ||
-        (document.documentElement.dataset.theme !== 'light' &&
-          window.matchMedia('(prefers-color-scheme: dark)').matches);
-
+      const dark = isDarkMode();
       const viewer = new DxfViewer(el, {
         autoResize: true,
-        clearColor: new THREE.Color(isDark ? 0x111113 : 0xf5f5f5),
+        clearColor: new THREE.Color(dark ? DARK_BG : LIGHT_BG),
         clearAlpha: 1,
         antialias: true,
         colorCorrection: true,
-        blackWhiteInversion: isDark,
+        blackWhiteInversion: dark,
         pointSize: 2,
         sceneOptions: {
           wireframeMesh: true,
@@ -71,6 +77,35 @@ export const DxfViewerCanvas = forwardRef<DxfViewerCanvasHandle>(
         }
       };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Sync background color with theme changes
+    useEffect(() => {
+      const apply = () => {
+        const renderer = viewerRef.current?.GetRenderer();
+        if (!renderer) return;
+        const dark = isDarkMode();
+        renderer.setClearColor(new THREE.Color(dark ? DARK_BG : LIGHT_BG), 1);
+        viewerRef.current!.Render();
+      };
+
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.attributeName === 'class') {
+            apply();
+            return;
+          }
+        }
+      });
+      observer.observe(document.documentElement, { attributes: true });
+
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      mq.addEventListener('change', apply);
+
+      return () => {
+        observer.disconnect();
+        mq.removeEventListener('change', apply);
+      };
     }, []);
 
     useEffect(() => {
