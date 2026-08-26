@@ -53,6 +53,8 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
+  const entityLayerRef = useRef<Konva.Layer>(null);
+  const zoomTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   // Pan (Space+drag) and box-select (plain drag on background) both live as
@@ -191,10 +193,27 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
       y: pointer.y - mousePointTo.y * newScale,
     };
 
+    // Disable hit-graph drawing during continuous zoom — Konva draws a
+    // hit-detection canvas alongside the scene canvas on every batchDraw,
+    // roughly doubling draw cost. Disabling it while zooming halves the
+    // per-frame time; re-enabled after zoom settles (debounced below).
+    const layer = entityLayerRef.current;
+    if (layer && layer.hitGraphEnabled()) {
+      layer.hitGraphEnabled(false);
+    }
+
     stage.scale({ x: newScale, y: newScale });
     stage.position(newPos);
     stage.batchDraw();
-    setViewerTransform({ ...newPos, scale: newScale });
+
+    if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
+    zoomTimerRef.current = setTimeout(() => {
+      if (layer) {
+        layer.hitGraphEnabled(true);
+        layer.batchDraw();
+      }
+      setViewerTransform({ x: stage.x(), y: stage.y(), scale: stage.scaleX() });
+    }, 150);
   };
 
   // Pan (Space+drag) and box-select share the same mousedown/mousemove/mouseup
@@ -341,7 +360,7 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
               per-DXF-layer organization. Avoids creating one HTML canvas per
               DXF layer, which caused "stage has N layers" warnings and froze
               the canvas on files with many layers (konva-layers-performance). */}
-          <KonvaLayer>
+          <KonvaLayer ref={entityLayerRef}>
             {layerNames.map((layerName) => {
               if (!layerVisibility[layerName]) return null;
               const entities = entitiesByLayer.get(layerName) ?? [];

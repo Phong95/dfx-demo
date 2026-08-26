@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type {
   IEntity,
   IDxf,
@@ -45,7 +46,7 @@ export interface EntityRendererProps {
  * established by `onMouseEnter`/`onMouseLeave` in Phase 1 (Phase 2 CLEAN-01,
  * CLEAN-03: click-to-select and hidden-entity dimming).
  */
-export function EntityRenderer({
+export const EntityRenderer = memo(function EntityRenderer({
   entity,
   color,
   dxfData,
@@ -176,4 +177,4 @@ export function EntityRenderer({
     default:
       return null;
   }
-}
+});
