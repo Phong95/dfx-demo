@@ -7,7 +7,7 @@ import { StructureBrowser } from '@/components/StructureBrowser';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { CleanupToolbar } from '@/components/CleanupToolbar';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Stage, type StageHandle } from '@/components/CanvasViewer/Stage';
+import { DxfViewerCanvas, type DxfViewerCanvasHandle } from '@/components/CanvasViewer/DxfViewerCanvas';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
@@ -19,7 +19,7 @@ function App() {
   const error = useDrawingStore((state) => state.error);
   const fileName = useDrawingStore((state) => state.fileName);
   const loadFile = useDrawingStore((state) => state.loadFile);
-  const stageRef = useRef<StageHandle>(null);
+  const stageRef = useRef<DxfViewerCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleRetry = () => {
@@ -123,7 +123,7 @@ function App() {
             <Button onClick={handleRetry}>Try again</Button>
           </div>
         )}
-        {dxfData && !error && <Stage ref={stageRef} />}
+        {dxfData && !error && <DxfViewerCanvas ref={stageRef} />}
       </main>
 
       <Toaster />

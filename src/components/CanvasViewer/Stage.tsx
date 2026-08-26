@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -9,7 +10,7 @@ import {
 } from 'react';
 import { Stage as KonvaStage, Layer as KonvaLayer, Group, Rect } from 'react-konva';
 import type Konva from 'konva';
-import type { IEntity } from 'dxf-parser';
+import type { IDxf, IEntity } from 'dxf-parser';
 import { useDrawingStore } from '@/store/drawingStore';
 import { EntityRenderer } from './entities/EntityRenderer';
 import { computeBoundsForEntities, computeBoundsForEntity } from '@/dxf/entityBounds';
@@ -37,17 +38,69 @@ interface ScreenRect {
   height: number;
 }
 
+interface EntityLayerContentProps {
+  entityLayerRef: React.RefObject<Konva.Layer | null>;
+  layerNames: string[];
+  entitiesByLayer: Map<string, { entity: IEntity; index: number }[]>;
+  layerVisibility: Record<string, boolean>;
+  deletedEntityIndices: ReadonlySet<number>;
+  hiddenEntityIndices: ReadonlySet<number>;
+  dxfData: IDxf;
+}
+
+// Isolated from Stage so hover/selection state changes don't re-render 27k+ entities.
+const EntityLayerContent = memo(function EntityLayerContent({
+  entityLayerRef,
+  layerNames,
+  entitiesByLayer,
+  layerVisibility,
+  deletedEntityIndices,
+  hiddenEntityIndices,
+  dxfData,
+}: EntityLayerContentProps) {
+  const setHoverEntityIndex = useDrawingStore((s) => s.setHoverEntityIndex);
+  const toggleSelect = useDrawingStore((s) => s.toggleSelect);
+
+  return (
+    <KonvaLayer ref={entityLayerRef}>
+      {layerNames.map((layerName) => {
+        if (!layerVisibility[layerName]) return null;
+        const entities = entitiesByLayer.get(layerName) ?? [];
+        return (
+          <Group key={layerName}>
+            {entities.map(({ entity, index }) => {
+              if (deletedEntityIndices.has(index)) return null;
+              const isHidden = hiddenEntityIndices.has(index);
+              return (
+                <EntityRenderer
+                  key={index}
+                  entity={entity}
+                  color={(entity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
+                  dxfData={dxfData}
+                  opacity={isHidden ? HIDDEN_OPACITY : 1}
+                  dash={isHidden ? HIDDEN_DASH : undefined}
+                  onMouseEnter={() => setHoverEntityIndex(index)}
+                  onMouseLeave={() => setHoverEntityIndex(null)}
+                  onClick={(e) => toggleSelect(index, e.evt.shiftKey)}
+                />
+              );
+            })}
+          </Group>
+        );
+      })}
+    </KonvaLayer>
+  );
+});
+
 export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
   const dxfData = useDrawingStore((state) => state.dxfData);
   const layerVisibility = useDrawingStore((state) => state.layerVisibility);
   const setViewerTransform = useDrawingStore((state) => state.setViewerTransform);
   const hoverEntityIndex = useDrawingStore((state) => state.hoverEntityIndex);
-  const setHoverEntityIndex = useDrawingStore((state) => state.setHoverEntityIndex);
   const focusedEntityIndex = useDrawingStore((state) => state.focusedEntityIndex);
   const selectedEntityIndices = useDrawingStore((state) => state.selectedEntityIndices);
   const deletedEntityIndices = useDrawingStore((state) => state.deletedEntityIndices);
   const hiddenEntityIndices = useDrawingStore((state) => state.hiddenEntityIndices);
-  const toggleSelect = useDrawingStore((state) => state.toggleSelect);
   const clearSelection = useDrawingStore((state) => state.clearSelection);
   const setSelection = useDrawingStore((state) => state.setSelection);
 
@@ -322,7 +375,10 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     }
   };
 
-  const layerNames = dxfData ? Object.keys(dxfData.tables?.layer?.layers ?? {}) : [];
+  const layerNames = useMemo(
+    () => (dxfData ? Object.keys(dxfData.tables?.layer?.layers ?? {}) : []),
+    [dxfData],
+  );
 
   // Pre-group entities by layer name in a single O(M) pass so the render loop
   // does not re-filter the full entity array for every DXF layer (was O(N*M)).
@@ -361,38 +417,17 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
           onMouseMove={handleStageMouseMove}
           onMouseUp={handleStageMouseUp}
         >
-          {/* Single Konva Layer for all DXF entities — uses Groups for
-              per-DXF-layer organization. Avoids creating one HTML canvas per
-              DXF layer, which caused "stage has N layers" warnings and froze
-              the canvas on files with many layers (konva-layers-performance). */}
-          <KonvaLayer ref={entityLayerRef}>
-            {layerNames.map((layerName) => {
-              if (!layerVisibility[layerName]) return null;
-              const entities = entitiesByLayer.get(layerName) ?? [];
-              return (
-                <Group key={layerName}>
-                  {entities.map(({ entity, index }) => {
-                    // Deleted entities render nothing at all (CONTEXT.md D-05).
-                    if (deletedEntityIndices.has(index)) return null;
-                    const isHidden = hiddenEntityIndices.has(index);
-                    return (
-                      <EntityRenderer
-                        key={index}
-                        entity={entity}
-                        color={(entity as ColoredEntity).resolvedColor ?? '#FFFFFF'}
-                        dxfData={dxfData!}
-                        opacity={isHidden ? HIDDEN_OPACITY : 1}
-                        dash={isHidden ? HIDDEN_DASH : undefined}
-                        onMouseEnter={() => setHoverEntityIndex(index)}
-                        onMouseLeave={() => setHoverEntityIndex(null)}
-                        onClick={(e) => toggleSelect(index, e.evt.shiftKey)}
-                      />
-                    );
-                  })}
-                </Group>
-              );
-            })}
-          </KonvaLayer>
+          {dxfData && (
+            <EntityLayerContent
+              entityLayerRef={entityLayerRef}
+              layerNames={layerNames}
+              entitiesByLayer={entitiesByLayer}
+              layerVisibility={layerVisibility}
+              deletedEntityIndices={deletedEntityIndices}
+              hiddenEntityIndices={hiddenEntityIndices}
+              dxfData={dxfData}
+            />
+          )}
           {dxfData && (hoveredEntity || focusedEntity || selectedEntityIndices.size > 0) && (
             <KonvaLayer listening={false}>
               {hoveredEntity && (
