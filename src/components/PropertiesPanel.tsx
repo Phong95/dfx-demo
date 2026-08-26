@@ -1,16 +1,10 @@
 import type { IEntity, ILineEntity, IArcEntity, ICircleEntity, ITextEntity, IMtextEntity } from 'dxf-parser';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 import { useDrawingStore } from '@/store/drawingStore';
 
 type ColoredEntity = IEntity & { resolvedColor?: string };
 
-/**
- * Key geometry fields per entity type (CONTEXT.md: "entity type, layer,
- * color, key geometry (coordinates/radius/text content)"). Unmatched types
- * return no rows -- the caller shows only Type/Layer/Color for those, never
- * an empty placeholder row for a field the type doesn't have (RESEARCH Code
- * Examples).
- */
 function getKeyGeometryFields(entity: IEntity): Array<[label: string, value: string]> {
   switch (entity.type) {
     case 'LINE': {
@@ -40,11 +34,11 @@ function getKeyGeometryFields(entity: IEntity): Array<[label: string, value: str
 
 function FieldRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 py-1">
-      <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
+    <div className="flex items-center justify-between gap-2 py-1.5">
+      <span className="shrink-0 text-[11px] text-muted-foreground">{label}</span>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="min-w-0 max-w-[65%] overflow-hidden text-ellipsis whitespace-nowrap text-right text-sm">
+          <span className="min-w-0 max-w-[65%] overflow-hidden text-ellipsis whitespace-nowrap text-right text-xs font-medium">
             {value}
           </span>
         </TooltipTrigger>
@@ -54,11 +48,6 @@ function FieldRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-/**
- * Always-mounted entity detail panel (02-UI-SPEC.md: never conditionally
- * removed, shows an empty-state message when there is no selection).
- * Reads selectedEntityIndices directly from the store -- CLEAN-01/CLEAN-02.
- */
 export function PropertiesPanel() {
   const selectedEntityIndices = useDrawingStore((state) => state.selectedEntityIndices);
   const dxfData = useDrawingStore((state) => state.dxfData);
@@ -66,13 +55,15 @@ export function PropertiesPanel() {
   const count = selectedEntityIndices.size;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden px-4 py-3">
-      <h2 className="text-base font-semibold">Properties</h2>
+    <div className="flex h-full flex-col overflow-hidden px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <Info className="size-3.5" />
+        Properties
+      </div>
 
       {count === 0 && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          No entity selected — Click an entity in the drawing, or box-select multiple, to see
-          details here.
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          Click an entity in the drawing, or box-select multiple, to see details here.
         </p>
       )}
 
@@ -88,11 +79,11 @@ export function PropertiesPanel() {
             <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
               <FieldRow label="Type" value={entity.type} />
               <FieldRow label="Layer" value={entity.layer} />
-              <div className="flex items-center justify-between gap-2 py-1">
-                <span className="shrink-0 text-xs text-muted-foreground">Color</span>
-                <span className="flex min-w-0 items-center gap-1 text-sm">
+              <div className="flex items-center justify-between gap-2 py-1.5">
+                <span className="shrink-0 text-[11px] text-muted-foreground">Color</span>
+                <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium">
                   <span
-                    className="size-3 shrink-0 rounded-sm border border-border"
+                    className="size-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
@@ -120,9 +111,9 @@ export function PropertiesPanel() {
             .map(([type, n]) => `${n} ${type}`)
             .join(' · ');
           return (
-            <div className="mt-2">
-              <p className="text-base font-semibold">{count} entities selected</p>
-              <p className="mt-1 text-xs text-muted-foreground">{breakdown}</p>
+            <div className="mt-3">
+              <p className="text-sm font-semibold">{count} entities selected</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{breakdown}</p>
             </div>
           );
         })()}

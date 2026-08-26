@@ -31,20 +31,26 @@ function errorResult(text: string): CallToolResult {
   return { content: [{ type: 'text', text }], isError: true };
 }
 
-/** Thin, stateless WS client to the Engine Server (RESEARCH Pattern 1). Holds
- * a Map of pending requestIds -> resolvers so multiple in-flight tool calls
- * can be pairing-matched back to their responses. */
 class EngineClient {
-  private ws: WebSocket;
+  private ws: WebSocket | null = null;
+  private url: string;
   private pending = new Map<
     string,
     { resolve: (value: ToolResponseMessage) => void; reject: (reason: Error) => void }
   >();
 
   constructor(url: string) {
-    this.ws = new WebSocket(url);
+    this.url = url;
+    this.connect();
+  }
+
+  private connect(): void {
+    this.ws = new WebSocket(this.url);
     this.ws.on('error', (error: Error) => {
       console.error(`[relay] engine connection error: ${error.message}`);
+    });
+    this.ws.on('close', () => {
+      this.ws = null;
     });
     this.ws.on('message', (raw) => {
       let message: ToolResponseMessage;
@@ -61,14 +67,30 @@ class EngineClient {
     });
   }
 
-  private get isOpen(): boolean {
-    return this.ws.readyState === WebSocket.OPEN;
+  private ensureConnection(): Promise<WebSocket> {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      return Promise.resolve(this.ws);
+    }
+
+    if (this.ws?.readyState === WebSocket.CONNECTING) {
+      return new Promise((resolve, reject) => {
+        const ws = this.ws!;
+        ws.once('open', () => resolve(ws));
+        ws.once('error', () => reject(new Error(ENGINE_UNREACHABLE_MESSAGE)));
+      });
+    }
+
+    this.connect();
+
+    return new Promise((resolve, reject) => {
+      const ws = this.ws!;
+      ws.once('open', () => resolve(ws));
+      ws.once('error', () => reject(new Error(ENGINE_UNREACHABLE_MESSAGE)));
+    });
   }
 
   async callTool(tool: string, params: Record<string, unknown>): Promise<ToolResponseMessage> {
-    if (!this.isOpen) {
-      throw new Error(ENGINE_UNREACHABLE_MESSAGE);
-    }
+    const ws = await this.ensureConnection();
 
     const requestId = randomUUID();
     const request: ToolRequestMessage = { type: 'tool_request', requestId, tool, params };
@@ -90,7 +112,7 @@ class EngineClient {
         },
       });
 
-      this.ws.send(JSON.stringify(request));
+      ws.send(JSON.stringify(request));
     });
   }
 }

@@ -106,10 +106,138 @@ The Engine Server binds `ws://127.0.0.1:4000` by default. To use a different por
 ENGINE_PORT=4321 npm run dev
 ```
 
+## Using with Other AI Tools
+
+The MCP server works with any tool that supports the Model Context Protocol -- not just Claude
+Desktop. Below are setup instructions for popular alternatives.
+
+### VS Code (GitHub Copilot / Copilot Chat)
+
+Add to your VS Code `settings.json` (User or Workspace):
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "dxf-demo": {
+        "command": "npx",
+        "args": [
+          "tsx",
+          "--tsconfig",
+          "<ABSOLUTE_PATH_TO_REPO>/tsconfig.server.json",
+          "<ABSOLUTE_PATH_TO_REPO>/src/server/index.ts"
+        ]
+      }
+    }
+  }
+}
+```
+
+Or create `.vscode/mcp.json` in this repo:
+
+```json
+{
+  "servers": {
+    "dxf-demo": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "<ABSOLUTE_PATH_TO_REPO>/tsconfig.server.json",
+        "<ABSOLUTE_PATH_TO_REPO>/src/server/index.ts"
+      ]
+    }
+  }
+}
+```
+
+After saving, open Copilot Chat in Agent mode and the DXF tools will appear. Make sure
+`npm run dev` is running first.
+
+### Cursor
+
+Add to `.cursor/mcp.json` in the project root (or `~/.cursor/mcp.json` for global config):
+
+```json
+{
+  "mcpServers": {
+    "dxf-demo": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "<ABSOLUTE_PATH_TO_REPO>/tsconfig.server.json",
+        "<ABSOLUTE_PATH_TO_REPO>/src/server/index.ts"
+      ]
+    }
+  }
+}
+```
+
+Restart Cursor after saving. The tools will be available in Cursor's Composer (Agent mode).
+
+### Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "dxf-demo": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "<ABSOLUTE_PATH_TO_REPO>/tsconfig.server.json",
+        "<ABSOLUTE_PATH_TO_REPO>/src/server/index.ts"
+      ]
+    }
+  }
+}
+```
+
+### Claude Code (CLI)
+
+Claude Code discovers MCP servers from `.claude/settings.json`. Add to this repo's
+`.claude/settings.json` or your global `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "dxf-demo": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "--tsconfig",
+        "<ABSOLUTE_PATH_TO_REPO>/tsconfig.server.json",
+        "<ABSOLUTE_PATH_TO_REPO>/src/server/index.ts"
+      ]
+    }
+  }
+}
+```
+
+### General MCP-Compatible Tools
+
+Any tool that supports MCP stdio servers can connect. The configuration pattern is the same
+across all of them -- point the tool at:
+
+- **Command:** `npx`
+- **Args:** `tsx --tsconfig <REPO>/tsconfig.server.json <REPO>/src/server/index.ts`
+- **Prerequisite:** `npm run dev` must be running (the MCP server relays tool calls to the
+  Engine Server on `ws://127.0.0.1:4000`)
+
+Replace `<ABSOLUTE_PATH_TO_REPO>` with the full path to your clone (e.g.
+`D:/Github/dxf-demo` on Windows, `/Users/you/dxf-demo` on macOS). Relative paths won't work
+because the AI tool may spawn the process from a different working directory.
+
 ### Troubleshooting
 
-- **Claude reports "Cannot reach the DXF Demo engine server"** -- make sure `npm run dev` is
-  running. Claude Desktop's MCP relay process is stateless and only relays tool calls to the
-  already-running Engine Server; it does not start one itself.
-- **Claude reports "No drawing loaded"** -- load a DXF file in the browser first. The Engine
-  Server's Document Model mirrors whatever the browser has loaded.
+- **"Cannot reach the DXF Demo engine server"** -- make sure `npm run dev` is running. The
+  MCP server is a stateless relay; it does not start the Engine Server itself.
+- **"No drawing loaded"** -- load a DXF file in the browser first. The Engine Server's
+  Document Model mirrors whatever the browser has loaded.
+- **Tools not appearing** -- restart your AI tool after saving the config. Most tools only
+  read MCP config on startup.
+- **Port conflict** -- if `ENGINE_PORT` is set in the MCP config's `env` block, it must
+  match the port `npm run dev` is using (default 4000).

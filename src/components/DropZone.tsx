@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 export function DropZone() {
   const loadFile = useDrawingStore((state) => state.loadFile);
   const [isDragOver, setIsDragOver] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
@@ -41,27 +42,40 @@ export function DropZone() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={cn(
-        'flex h-full w-full flex-col items-center justify-center gap-4 text-center transition-colors',
-        isDragOver && 'bg-surface/40',
-      )}
+      className="flex h-full w-full items-center justify-center p-8"
     >
-      <Upload className="size-10 text-muted-foreground" />
-      <h2 className="text-xl font-semibold">No drawing loaded</h2>
-      <p className="max-w-sm text-sm text-muted-foreground">
-        Drag and drop a DXF file here, or click Load DXF File to browse your computer.
-      </p>
-      <Button onClick={() => inputRef.current?.click()}>
-        <FileUp className="size-4" />
-        Load DXF File
-      </Button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".dxf"
-        className="hidden"
-        onChange={handleInputChange}
-      />
+      <div
+        className={cn(
+          'flex max-w-md flex-col items-center gap-5 rounded-xl border-2 border-dashed px-10 py-14 text-center transition-all',
+          isDragOver
+            ? 'border-accent bg-accent-muted'
+            : 'border-border bg-surface',
+        )}
+      >
+        <div className={cn(
+          'flex size-14 items-center justify-center rounded-xl transition-colors',
+          isDragOver ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground',
+        )}>
+          <Upload className="size-6" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold">Load a DXF drawing</h2>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+            Drag and drop a .dxf file here, or click the button below to browse.
+          </p>
+        </div>
+        <Button onClick={() => inputRef.current?.click()} className="cursor-pointer">
+          <FileUp className="size-4" />
+          Choose File
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".dxf"
+          className="hidden"
+          onChange={handleInputChange}
+        />
+      </div>
     </div>
   );
 }

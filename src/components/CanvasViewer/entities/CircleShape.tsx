@@ -32,6 +32,7 @@ export function CircleShape({
       radius={entity.radius}
       stroke={color}
       strokeWidth={strokeWidth}
+      strokeScaleEnabled={false}
       hitStrokeWidth={10}
       opacity={opacity}
       dash={dash}

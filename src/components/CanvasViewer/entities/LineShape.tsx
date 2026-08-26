@@ -30,6 +30,7 @@ export function LineShape({
       points={points}
       stroke={color}
       strokeWidth={strokeWidth}
+      strokeScaleEnabled={false}
       hitStrokeWidth={10}
       opacity={opacity}
       dash={dash}

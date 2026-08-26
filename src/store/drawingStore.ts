@@ -120,7 +120,14 @@ export const useDrawingStore = create<DrawingState>()(
               layerFlags: data.unknownReport.layerFlags,
               isLoading: false,
               error: null,
+              selectedEntityIndices: new Set(),
+              deletedEntityIndices: new Set(),
+              hiddenEntityIndices: new Set(),
+              hoverEntityIndex: null,
+              focusedEntityIndex: null,
+              viewerTransform: null,
             });
+            useDrawingStore.temporal.getState().clear();
             syncState();
           } else {
             set({

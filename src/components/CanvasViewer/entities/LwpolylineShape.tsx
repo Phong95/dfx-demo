@@ -57,6 +57,7 @@ export function LwpolylineShape({
       closed={entity.shape}
       stroke={color}
       strokeWidth={strokeWidth}
+      strokeScaleEnabled={false}
       hitStrokeWidth={10}
       opacity={opacity}
       dash={dash}

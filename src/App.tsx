@@ -1,11 +1,12 @@
-import { useRef } from 'react';
-import { Maximize } from 'lucide-react';
+import { useRef, type ChangeEvent } from 'react';
+import { Maximize, FileCode2, FolderOpen } from 'lucide-react';
 import { useDrawingStore } from '@/store/drawingStore';
 import { DropZone } from '@/components/DropZone';
 import { LayerPanel } from '@/components/LayerPanel';
 import { StructureBrowser } from '@/components/StructureBrowser';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { CleanupToolbar } from '@/components/CleanupToolbar';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Stage, type StageHandle } from '@/components/CanvasViewer/Stage';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -17,33 +18,78 @@ function App() {
   const isLoading = useDrawingStore((state) => state.isLoading);
   const error = useDrawingStore((state) => state.error);
   const fileName = useDrawingStore((state) => state.fileName);
+  const loadFile = useDrawingStore((state) => state.loadFile);
   const stageRef = useRef<StageHandle>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleRetry = () => {
     useDrawingStore.setState({ error: null });
   };
 
+  const handleOpenFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      void loadFile(file);
+    }
+    e.target.value = '';
+  };
+
   return (
-    <div className="grid h-screen grid-cols-[320px_1fr] grid-rows-[48px_48px_1fr] bg-background text-foreground">
-      <header className="col-span-2 row-start-1 flex h-12 items-center justify-between bg-surface px-4">
-        <span
-          title={fileName ?? undefined}
-          className="max-w-md overflow-hidden text-ellipsis whitespace-nowrap text-sm"
-        >
-          {fileName ?? 'No file loaded'}
-        </span>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => stageRef.current?.fitToView()}
-          disabled={!dxfData}
-          aria-label="Fit to view"
-        >
-          <Maximize className="size-4 text-accent" />
-        </Button>
+    <div className="grid h-screen grid-cols-[300px_1fr] grid-rows-[auto_auto_1fr] bg-background text-foreground">
+      <header className="col-span-2 flex h-12 items-center justify-between border-b border-border bg-surface px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-accent">
+              <FileCode2 className="size-4 text-accent-foreground" />
+            </div>
+            <span className="text-sm font-semibold tracking-tight">DXF Demo</span>
+          </div>
+
+          {fileName && (
+            <>
+              <Separator orientation="vertical" className="h-5" />
+              <span
+                title={fileName}
+                className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted-foreground"
+              >
+                {fileName}
+              </span>
+            </>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <FolderOpen className="size-3.5" />
+            {dxfData ? 'Open' : 'Open File'}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".dxf"
+            className="hidden"
+            onChange={handleOpenFile}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => stageRef.current?.fitToView()}
+            disabled={!dxfData}
+            aria-label="Fit to view"
+          >
+            <Maximize className="size-4" />
+          </Button>
+        </div>
       </header>
 
-      <aside className="row-start-2 row-span-2 flex flex-col overflow-hidden bg-surface">
+      <aside className="row-start-2 row-span-2 flex flex-col overflow-hidden border-r border-border bg-surface">
         <div className="h-[240px] shrink-0 overflow-hidden">
           <LayerPanel />
         </div>
@@ -61,11 +107,14 @@ function App() {
         <CleanupToolbar />
       </div>
 
-      <main className="row-start-3 col-start-2 overflow-hidden bg-background">
+      <main className="row-start-3 col-start-2 overflow-hidden bg-canvas-bg">
         {!dxfData && !isLoading && !error && <DropZone />}
         {isLoading && (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            Parsing drawing…
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="size-8 animate-spin rounded-full border-2 border-muted-foreground/20 border-t-accent" />
+              <p className="text-sm text-muted-foreground">Parsing drawing...</p>
+            </div>
           </div>
         )}
         {error && (
@@ -77,7 +126,7 @@ function App() {
         {dxfData && !error && <Stage ref={stageRef} />}
       </main>
 
-      <Toaster theme="dark" />
+      <Toaster />
     </div>
   );
 }

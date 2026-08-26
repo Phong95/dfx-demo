@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Eye, EyeOff, Lock, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Lock, AlertTriangle, Layers } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ export function LayerPanel() {
   const layers = dxfData?.tables?.layer?.layers ?? {};
   const layerNames = Object.keys(layers).sort((a, b) => a.localeCompare(b));
 
-  // Count entities per layer once per dxfData change, not once per row render.
   const entityCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const entity of dxfData?.entities ?? []) {
@@ -32,34 +31,55 @@ export function LayerPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <h2 className="px-4 py-3 text-base font-semibold">Layers</h2>
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <Layers className="size-3.5" />
+          Layers
+        </div>
+        {layerNames.length > 0 && (
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={showAllLayers}
+                  className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                  aria-label="Show all layers"
+                >
+                  <Eye className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Show All</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={hideAllLayers}
+                  className="flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                  aria-label="Hide all layers"
+                >
+                  <EyeOff className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Hide All</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+      </div>
 
       {unknownCount > 0 && (
-        <div className="flex items-start gap-2 px-4 pb-3 text-xs text-[#EF4444]">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+        <div className="mx-3 mb-2 flex items-start gap-2 rounded-md bg-destructive/10 px-2.5 py-2 text-xs text-destructive">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
           <span>
-            {unknownCount} unsupported entity type(s) found — nothing was dropped, but these won&apos;t
-            render. See Unknown section below.
+            {unknownCount} unsupported entity type(s) found — won&apos;t render. See Unknown section below.
           </span>
-        </div>
-      )}
-
-      {layerNames.length > 0 && (
-        <div className="flex items-center justify-between gap-2 px-4 pb-2">
-          <Button variant="outline" size="sm" onClick={showAllLayers}>
-            <Eye className="size-4" />
-            Show All
-          </Button>
-          <Button variant="outline" size="sm" onClick={hideAllLayers}>
-            <EyeOff className="size-4" />
-            Hide All
-          </Button>
         </div>
       )}
 
       <ScrollArea className="flex-1">
         {layerNames.length === 0 ? (
-          <p className="px-4 text-sm text-muted-foreground">No layers found in this file.</p>
+          <p className="px-3 text-xs text-muted-foreground">No layers found.</p>
         ) : (
           <ul>
             {layerNames.map((name) => {
@@ -72,16 +92,16 @@ export function LayerPanel() {
               return (
                 <li
                   key={name}
-                  className="flex h-8 items-center gap-2 px-4 hover:bg-surface"
+                  className="group flex h-8 items-center gap-2 px-3 transition-colors hover:bg-surface-hover"
                 >
                   <span
-                    className="size-3 shrink-0 rounded-sm border border-border"
+                    className="size-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: swatchColor }}
                     aria-hidden="true"
                   />
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                      <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-xs">
                         {name}
                       </span>
                     </TooltipTrigger>
@@ -89,25 +109,25 @@ export function LayerPanel() {
                   </Tooltip>
 
                   {flags?.frozen && (
-                    <Badge variant="outline" className="shrink-0">
+                    <Badge variant="outline" className="h-4 px-1 text-[10px]">
                       Frozen
                     </Badge>
                   )}
                   {flags?.locked && (
-                    <Badge variant="outline" className="shrink-0">
-                      <Lock className="size-3" />
+                    <Badge variant="outline" className="h-4 px-1">
+                      <Lock className="size-2.5" />
                     </Badge>
                   )}
 
-                  <span className="shrink-0 text-xs text-muted-foreground">{count}</span>
+                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{count}</span>
 
                   <button
                     type="button"
                     onClick={() => toggleLayerVisibility(name)}
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    className="shrink-0 cursor-pointer text-muted-foreground opacity-0 transition-all hover:text-foreground group-hover:opacity-100"
                     aria-label={visible ? `Hide layer ${name}` : `Show layer ${name}`}
                   >
-                    {visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+                    {visible ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                   </button>
                 </li>
               );

@@ -6,7 +6,7 @@
  * Security Domain: filePath is LLM-controlled and must be validated before
  * any write).
  */
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildEntityTagRanges } from '@/dxf/entityTagRanges';
 import { filterDxfText, validateExport } from '@/dxf/exportDxf';
@@ -50,6 +50,7 @@ export async function handleExportDxf(
     };
   }
 
+  await mkdir(path.dirname(normalized), { recursive: true });
   await writeFile(normalized, filtered, 'utf-8');
 
   return { exported: true, outputPath: normalized, entityCount: expectedCount };

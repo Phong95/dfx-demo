@@ -21,16 +21,8 @@ import { buildEntityTagRanges } from '@/dxf/entityTagRanges';
 import { filterDxfText, validateExport } from '@/dxf/exportDxf';
 import { saveDxf } from '@/dxf/saveDxf';
 
-// Batch-delete confirmation threshold (CONTEXT.md D-07 / 02-UI-SPEC.md):
-// 1-9 entity deletes proceed immediately (undo is the safety net); 10+
-// requires an explicit confirmation dialog.
 const BATCH_DELETE_THRESHOLD = 10;
 
-/**
- * Delete/Hide/Undo/Redo/Export toolbar (CONTEXT.md D-04/D-05/D-06/D-07/D-09
- * through D-12). Renders below the header, spanning the canvas column only
- * (02-UI-SPEC.md layout).
- */
 export function CleanupToolbar() {
   const selectedEntityIndices = useDrawingStore((state) => state.selectedEntityIndices);
   const deletedEntityIndices = useDrawingStore((state) => state.deletedEntityIndices);
@@ -43,17 +35,12 @@ export function CleanupToolbar() {
   const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // zundo's `.temporal` is a separate vanilla store (not a hook) -- subscribe
-  // via zustand's `useStore` so Undo/Redo disabled-state reacts to history
-  // changes (RESEARCH Pattern 2).
   const pastCount = useStore(useDrawingStore.temporal, (state) => state.pastStates.length);
   const futureCount = useStore(useDrawingStore.temporal, (state) => state.futureStates.length);
 
   const selectionCount = selectedEntityIndices.size;
   const hasSelection = selectionCount > 0;
 
-  // Ctrl+Z / Ctrl+Shift+Z only -- no Ctrl+Y (CONTEXT.md locked decision,
-  // RESEARCH Code Examples).
   useEffect(() => {
     function handleKeydown(e: KeyboardEvent) {
       const isMod = e.ctrlKey || e.metaKey;
@@ -71,7 +58,6 @@ export function CleanupToolbar() {
   }, []);
 
   const handleDelete = () => {
-    // Batch-delete confirmation dialog for 10+ entities (CONTEXT.md D-07).
     if (selectionCount >= BATCH_DELETE_THRESHOLD) {
       setIsBatchDeleteOpen(true);
       return;
@@ -115,14 +101,14 @@ export function CleanupToolbar() {
   };
 
   return (
-    <div className="flex h-12 items-center gap-2 bg-surface px-4">
+    <div className="flex h-10 items-center gap-1.5 border-b border-border bg-surface px-3">
       {hasSelection && (
-        <Badge className="bg-accent text-accent-foreground">{selectionCount} selected</Badge>
+        <Badge className="bg-accent text-accent-foreground text-[10px]">{selectionCount} selected</Badge>
       )}
 
       <AlertDialog open={isBatchDeleteOpen} onOpenChange={setIsBatchDeleteOpen}>
-        <Button variant="destructive" size="sm" onClick={handleDelete} disabled={!hasSelection}>
-          <Trash2 className="size-4" />
+        <Button variant="destructive" size="sm" onClick={handleDelete} disabled={!hasSelection} className="h-7 cursor-pointer text-xs">
+          <Trash2 className="size-3.5" />
           Delete
         </Button>
         <AlertDialogContent>
@@ -142,23 +128,24 @@ export function CleanupToolbar() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Button variant="outline" size="sm" onClick={hideSelected} disabled={!hasSelection}>
-        <EyeOff className="size-4" />
+      <Button variant="outline" size="sm" onClick={hideSelected} disabled={!hasSelection} className="h-7 cursor-pointer text-xs">
+        <EyeOff className="size-3.5" />
         Hide
       </Button>
 
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="mx-1 h-5" />
 
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
+            className="size-7 cursor-pointer"
             aria-label="Undo"
             disabled={pastCount === 0}
             onClick={() => useDrawingStore.temporal.getState().undo()}
           >
-            <Undo2 className="size-4" />
+            <Undo2 className="size-3.5" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
@@ -169,11 +156,12 @@ export function CleanupToolbar() {
           <Button
             variant="ghost"
             size="icon"
+            className="size-7 cursor-pointer"
             aria-label="Redo"
             disabled={futureCount === 0}
             onClick={() => useDrawingStore.temporal.getState().redo()}
           >
-            <Redo2 className="size-4" />
+            <Redo2 className="size-3.5" />
           </Button>
         </TooltipTrigger>
         <TooltipContent>Redo (Ctrl+Shift+Z)</TooltipContent>
@@ -184,11 +172,12 @@ export function CleanupToolbar() {
       <Button
         variant="default"
         size="sm"
+        className="h-7 cursor-pointer text-xs"
         onClick={handleExport}
         disabled={!dxfData || isExporting}
       >
-        <Download className="size-4" />
-        {isExporting ? 'Exporting…' : 'Export DXF'}
+        <Download className="size-3.5" />
+        {isExporting ? 'Exporting...' : 'Export DXF'}
       </Button>
     </div>
   );

@@ -4,28 +4,61 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #1e1e1e;
-  --foreground: #ffffff;
-  --surface: #2a2a2e;
-  --accent: #3b82f6;
+  --background: #f4f4f5;
+  --foreground: #18181b;
+  --surface: #ffffff;
+  --surface-hover: #f4f4f5;
+  --accent: #4f46e5;
   --accent-foreground: #ffffff;
+  --accent-muted: #eef2ff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --ring: #4f46e5;
+  --canvas-bg: #e8e8ec;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #0c0c0f;
+  --foreground: #fafafa;
+  --surface: #18181b;
+  --surface-hover: #27272a;
+  --accent: #6366f1;
+  --accent-foreground: #ffffff;
+  --accent-muted: #1e1b4b;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #3a3a3e;
+  --border: #27272a;
+  --muted: #27272a;
   --muted-foreground: #a1a1aa;
-  --radius: 0.5rem;
+  --popover: #1c1c20;
+  --popover-foreground: #fafafa;
+  --ring: #6366f1;
+  --canvas-bg: #111114;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-muted: var(--accent-muted);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
+  --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-ring: var(--ring);
+  --color-canvas-bg: var(--canvas-bg);
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
