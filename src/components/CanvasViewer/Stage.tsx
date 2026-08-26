@@ -193,13 +193,9 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
       y: pointer.y - mousePointTo.y * newScale,
     };
 
-    // Disable hit-graph drawing during continuous zoom — Konva draws a
-    // hit-detection canvas alongside the scene canvas on every batchDraw,
-    // roughly doubling draw cost. Disabling it while zooming halves the
-    // per-frame time; re-enabled after zoom settles (debounced below).
     const layer = entityLayerRef.current;
-    if (layer && layer.hitGraphEnabled()) {
-      layer.hitGraphEnabled(false);
+    if (layer && layer.listening()) {
+      layer.listening(false);
     }
 
     stage.scale({ x: newScale, y: newScale });
@@ -209,7 +205,7 @@ export const Stage = forwardRef<StageHandle>(function Stage(_props, ref) {
     if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
     zoomTimerRef.current = setTimeout(() => {
       if (layer) {
-        layer.hitGraphEnabled(true);
+        layer.listening(true);
         layer.batchDraw();
       }
       setViewerTransform({ x: stage.x(), y: stage.y(), scale: stage.scaleX() });
